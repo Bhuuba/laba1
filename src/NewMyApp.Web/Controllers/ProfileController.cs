@@ -21,19 +21,22 @@ public class ProfileController : Controller
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<ProfileController> _logger;
     private readonly ICertificateService _certificateService;
+    private readonly SignInManager<User> _signInManager;
 
     public ProfileController(
         UserManager<User> userManager,
         ApplicationDbContext context,
         IWebHostEnvironment environment,
         ILogger<ProfileController> logger,
-        ICertificateService certificateService)
+        ICertificateService certificateService,
+        SignInManager<User> signInManager)
     {
         _userManager = userManager;
         _context = context;
         _environment = environment;
         _logger = logger;
         _certificateService = certificateService;
+        _signInManager = signInManager;
     }
 
     public async Task<IActionResult> Index()
@@ -185,5 +188,115 @@ public class ProfileController : Controller
 
         var certificate = await _certificateService.GenerateCertificateAsync(user.Id);
         return View(certificate);
+    }
+
+    public async Task<IActionResult> Settings()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return View(user);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> UpdateProfile(string firstName, string lastName)
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        user.FirstName = firstName;
+        user.LastName = lastName;
+
+        var result = await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            TempData["StatusMessage"] = "Профіль успішно оновлено";
+            return RedirectToAction(nameof(Settings));
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View(nameof(Settings), user);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid)
+        {
+            return RedirectToAction(nameof(Settings), new { tab = "password" });
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, model.CurrentPassword, model.NewPassword);
+        if (result.Succeeded)
+        {
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["StatusMessage"] = "Пароль успішно змінено";
+            return RedirectToAction(nameof(Settings), new { tab = "password" });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return RedirectToAction(nameof(Settings), new { tab = "password" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ChangeEmail(string newEmail)
+    {
+        if (string.IsNullOrEmpty(newEmail))
+        {
+            ModelState.AddModelError(string.Empty, "Email не може бути порожнім");
+            return RedirectToAction(nameof(Settings), new { tab = "email" });
+        }
+
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        if (user.Email == newEmail)
+        {
+            ModelState.AddModelError(string.Empty, "Новий email співпадає з поточним");
+            return RedirectToAction(nameof(Settings), new { tab = "email" });
+        }
+
+        var token = await _userManager.GenerateChangeEmailTokenAsync(user, newEmail);
+        var result = await _userManager.ChangeEmailAsync(user, newEmail, token);
+
+        if (result.Succeeded)
+        {
+            await _signInManager.RefreshSignInAsync(user);
+            TempData["StatusMessage"] = "Email успішно змінено";
+            return RedirectToAction(nameof(Settings), new { tab = "email" });
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return RedirectToAction(nameof(Settings), new { tab = "email" });
     }
 } 

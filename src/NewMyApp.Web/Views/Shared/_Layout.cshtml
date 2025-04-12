@@ -12,133 +12,131 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/animations.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/NewMyApp.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/particles.js@2.0.0/particles.js">
     @await RenderSectionAsync("Styles", required: false)
 </head>
 <body class="bg-light">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom box-shadow fixed-top">
+    <div id="particles-js" class="particles-container"></div>
+    
+    <header class="header-main">
+        <nav class="navbar navbar-expand-lg navbar-glass fixed-top">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-globe2 me-2"></i>NewMyApp
+                    <i class="bi bi-globe2 me-2 text-primary"></i>
+                    <span class="brand-text">NewMyApp</span>
                 </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
+                
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Головна</a>
-                        </li>
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Posts" asp-action="Index">Пости</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Groups" asp-action="Index">Групи</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Friends" asp-action="Index">Друзі</a>
-                            </li>
-                        }
-                    </ul>
+                
+                <div class="navbar-collapse collapse">
                     @if (User.Identity?.IsAuthenticated == true)
                     {
-                        <form class="d-flex mx-3" action="@Url.Action("Index", "Search")" method="get">
-                            <input class="form-control me-2" type="search" name="q" placeholder="Пошук..." aria-label="Search">
-                            <button class="btn btn-outline-primary" type="submit">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </form>
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-home"></i> Головна
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Posts" asp-action="MyPosts">
+                                    <i class="fas fa-file-alt"></i> Мої пости
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Groups" asp-action="MyGroups">
+                                    <i class="fas fa-users"></i> Мої групи
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Friends" asp-action="Index">
+                                    <i class="fas fa-user-friends"></i> Друзі
+                                </a>
+                            </li>
+                        </ul>
+
+                        <div class="d-flex align-items-center">
+                            <form class="search-form me-3" action="@Url.Action("Index", "Search")" method="get">
+                                <div class="input-group">
+                                    <input class="form-control search-input" type="search" name="q" placeholder="Пошук...">
+                                    <button class="btn btn-outline-primary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+
+                            <div class="dropdown">
+                                <a class="nav-link" asp-controller="Profile" asp-action="Index">
+                                    <i class="bi bi-person-circle fs-4"></i>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end animate slideIn">
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                            <i class="fas fa-user me-2"></i>Мій профіль
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
+                                            <i class="fas fa-gear me-2"></i>Налаштування
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt me-2"></i>Вийти
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     }
-                    <partial name="_LoginPartial" />
+                    else
+                    {
+                        <ul class="navbar-nav ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/Register">
+                                    <i class="fas fa-user-plus"></i> Зареєструватися
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-area="Identity" asp-page="/Account/Login">
+                                    <i class="fas fa-sign-in-alt"></i> Увійти
+                                </a>
+                            </li>
+                        </ul>
+                    }
                 </div>
             </div>
         </nav>
     </header>
-    
-    <div class="container mt-5 pt-4">
-        <div class="row">
-            @if (User.Identity?.IsAuthenticated == true)
-            {
-                <div class="col-md-3 d-none d-md-block">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <div class="text-center mb-3">
-                                <img src="@(string.IsNullOrEmpty(User.FindFirst("ProfilePicture")?.Value) ? "/images/default-avatar.png" : User.FindFirst("ProfilePicture")?.Value)"
-                                     class="rounded-circle mb-2" alt="Profile Picture" style="width: 100px; height: 100px; object-fit: cover;">
-                                <h5 class="mb-0">@User.Identity.Name</h5>
-                            </div>
-                            <div class="list-group list-group-flush">
-                                <a asp-controller="Profile" asp-action="Index" class="list-group-item list-group-item-action">
-                                    <i class="bi bi-person me-2"></i>Мій профіль
-                                </a>
-                                <a asp-controller="Groups" asp-action="MyGroups" class="list-group-item list-group-item-action">
-                                    <i class="bi bi-people-fill me-2"></i>Мої групи
-                                </a>
-                                <a asp-controller="Posts" asp-action="MyPosts" class="list-group-item list-group-item-action">
-                                    <i class="bi bi-file-text me-2"></i>Мої пости
-                                </a>
-                                <a asp-controller="Friends" asp-action="Index" class="list-group-item list-group-item-action">
-                                    <i class="bi bi-person-plus me-2"></i>Друзі
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <main role="main" class="pb-3">
-                        @RenderBody()
-                    </main>
-                </div>
-                <div class="col-md-3 d-none d-md-block">
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title">Популярні групи</h5>
-                            <div class="list-group list-group-flush" id="popularGroups">
-                                <!-- Populated by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Рекомендовані друзі</h5>
-                            <div class="list-group list-group-flush" id="recommendedFriends">
-                                <!-- Populated by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            }
-            else
-            {
-                <div class="col-12">
-                    <main role="main" class="pb-3">
-                        @RenderBody()
-                    </main>
-                </div>
-            }
-        </div>
+
+    <div class="container main-container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
     </div>
 
-    <footer class="border-top footer text-muted mt-5">
-        <div class="container py-3">
+    <footer class="footer mt-auto py-3">
+        <div class="container">
             <div class="row">
                 <div class="col-md-6">
-                    &copy; 2024 - NewMyApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                    &copy; 2024 - NewMyApp - <a asp-controller="Home" asp-action="Privacy">Privacy</a>
                 </div>
                 <div class="col-md-6 text-end">
-                    <a href="#" class="text-muted me-3"><i class="bi bi-facebook"></i></a>
-                    <a href="#" class="text-muted me-3"><i class="bi bi-twitter"></i></a>
-                    <a href="#" class="text-muted"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-muted me-3"><i class="fab fa-facebook"></i></a>
+                    <a href="#" class="text-muted me-3"><i class="fab fa-twitter"></i></a>
+                    <a href="#" class="text-muted"><i class="fab fa-instagram"></i></a>
                 </div>
             </div>
         </div>
     </footer>
-    
+
     <!-- Scripts -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -147,7 +145,43 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.8/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+    <script src="https://unpkg.com/particles.js@2.0.0/particles.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/particles-config.js"></script>
+    
+    <script>
+        // Initialize particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: '#0d6efd' },
+                shape: { type: 'circle' },
+                opacity: { value: 0.5, random: false },
+                size: { value: 3, random: true },
+                line_linked: { enable: true, distance: 150, color: '#0d6efd', opacity: 0.4, width: 1 },
+                move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+            },
+            interactivity: {
+                detect_on: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'repulse' },
+                    onclick: { enable: true, mode: 'push' },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+
+        // Initialize AOS
+        AOS.init();
+
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

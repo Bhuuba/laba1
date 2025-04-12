@@ -6,22 +6,38 @@
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Привіт @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button type="submit" class="nav-link btn btn-link text-dark">Вийти</button>
-        </form>
+    var currentUser = await UserManager.GetUserAsync(User);
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (!string.IsNullOrEmpty(currentUser?.ProfilePicture))
+            {
+                <img src="@currentUser.ProfilePicture" alt="Profile" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+            }
+            else
+            {
+                <img src="/images/default-avatar.png" alt="Profile" class="rounded-circle" style="width: 32px; height: 32px; object-fit: cover;">
+            }
+            @($"{currentUser?.FirstName} {currentUser?.LastName}")
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index"><i class="fas fa-user"></i> Профіль</a></li>
+            <li><a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Settings"><i class="fas fa-cog"></i> Налаштування</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <form asp-area="" asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Вийти</button>
+                </form>
+            </li>
+        </ul>
     </li>
 }
 else
 {
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Зареєструватися</a>
+        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Login">Увійти</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Увійти</a>
+        <a class="nav-link" asp-area="" asp-controller="Account" asp-action="Register">Зареєструватися</a>
     </li>
 }
 </ul> 

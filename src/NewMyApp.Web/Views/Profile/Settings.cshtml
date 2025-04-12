@@ -1,0 +1,124 @@
+@model NewMyApp.Core.Models.User
+
+@{
+    ViewData["Title"] = "Налаштування профілю";
+    var tab = Context.Request.Query["tab"].ToString();
+    if (string.IsNullOrEmpty(tab)) tab = "profile";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (TempData["StatusMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["StatusMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="nav flex-column nav-pills" role="tablist">
+                <a class="nav-link @(tab == "profile" ? "active" : "")" 
+                   href="#profile" data-bs-toggle="pill" role="tab">
+                    <i class="fas fa-user me-2"></i>Профіль
+                </a>
+                <a class="nav-link @(tab == "password" ? "active" : "")" 
+                   href="#password" data-bs-toggle="pill" role="tab">
+                    <i class="fas fa-key me-2"></i>Пароль
+                </a>
+                <a class="nav-link @(tab == "email" ? "active" : "")" 
+                   href="#email" data-bs-toggle="pill" role="tab">
+                    <i class="fas fa-envelope me-2"></i>Email
+                </a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="tab-content">
+                <div class="tab-pane fade @(tab == "profile" ? "show active" : "")" id="profile" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Редагування профілю</h5>
+                            <form asp-action="UpdateProfile" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Ім'я</label>
+                                    <input type="text" class="form-control" name="firstName" value="@Model.FirstName" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Прізвище</label>
+                                    <input type="text" class="form-control" name="lastName" value="@Model.LastName" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Про себе</label>
+                                    <textarea class="form-control" name="bio" rows="3">@Model.Bio</textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Дата народження</label>
+                                    <input type="date" class="form-control" name="dateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade @(tab == "password" ? "show active" : "")" id="password" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Зміна паролю</h5>
+                            <form asp-action="ChangePassword" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Поточний пароль</label>
+                                    <input type="password" class="form-control" name="CurrentPassword" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Новий пароль</label>
+                                    <input type="password" class="form-control" name="NewPassword" />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Підтвердження паролю</label>
+                                    <input type="password" class="form-control" name="ConfirmPassword" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Змінити пароль</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade @(tab == "email" ? "show active" : "")" id="email" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Зміна email</h5>
+                            <form asp-action="ChangeEmail" method="post">
+                                <div class="mb-3">
+                                    <label class="form-label">Поточний email</label>
+                                    <input type="email" class="form-control" value="@Model.Email" disabled />
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Новий email</label>
+                                    <input type="email" class="form-control" name="newEmail" />
+                                </div>
+                                <button type="submit" class="btn btn-primary">Змінити email</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Оновлюємо URL при зміні вкладки
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                const tab = this.getAttribute('href').replace('#', '');
+                const url = new URL(window.location);
+                url.searchParams.set('tab', tab);
+                window.history.pushState({}, '', url);
+            });
+        });
+    </script>
+} 

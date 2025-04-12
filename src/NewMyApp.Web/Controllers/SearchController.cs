@@ -30,9 +30,9 @@ public class SearchController : Controller
         var searchTerm = q.ToLower();
 
         var users = await _context.Users
-            .Where(u => u.FirstName.ToLower().Contains(searchTerm) ||
-                       u.LastName.ToLower().Contains(searchTerm) ||
-                       u.Email.ToLower().Contains(searchTerm))
+            .Where(u => (u.FirstName != null && u.FirstName.ToLower().Contains(searchTerm)) ||
+                       (u.LastName != null && u.LastName.ToLower().Contains(searchTerm)) ||
+                       (u.Email != null && u.Email.ToLower().Contains(searchTerm)))
             .Take(10)
             .ToListAsync();
 
@@ -40,15 +40,15 @@ public class SearchController : Controller
             .Include(p => p.User)
             .Include(p => p.Likes)
             .Include(p => p.Comments)
-            .Where(p => p.Content.ToLower().Contains(searchTerm))
+            .Where(p => p.Content != null && p.Content.ToLower().Contains(searchTerm))
             .OrderByDescending(p => p.CreatedAt)
             .Take(10)
             .ToListAsync();
 
         var groups = await _context.Groups
             .Include(g => g.UserGroups)
-            .Where(g => g.Name.ToLower().Contains(searchTerm) ||
-                       g.Description.ToLower().Contains(searchTerm))
+            .Where(g => (g.Name != null && g.Name.ToLower().Contains(searchTerm)) ||
+                       (g.Description != null && g.Description.ToLower().Contains(searchTerm)))
             .Take(10)
             .ToListAsync();
 

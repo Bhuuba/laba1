@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace NewMyApp.Core.Models
 {
@@ -22,6 +24,9 @@ namespace NewMyApp.Core.Models
         public virtual ICollection<Like> Likes { get; set; } = new HashSet<Like>();
         public virtual ICollection<PostTag> PostTags { get; set; } = new HashSet<PostTag>();
         public virtual ICollection<PostView> Views { get; set; } = new HashSet<PostView>();
+
+        [NotMapped]
+        public IFormFile? ImageFile { get; set; }
         
         public Post()
         {

@@ -105,18 +105,18 @@ namespace NewMyApp.Web.Controllers
                 CreatedAt = DateTime.UtcNow
             };
 
-            if (model.Image != null)
+            if (model.ImageFile != null)
             {
                 var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "posts");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                var uniqueFileName = $"{Guid.NewGuid()}_{model.Image.FileName}";
+                var uniqueFileName = $"{Guid.NewGuid()}_{model.ImageFile.FileName}";
                 var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
                 using (var fileStream = new FileStream(filePath, FileMode.Create))
                 {
-                    await model.Image.CopyToAsync(fileStream);
+                    await model.ImageFile.CopyToAsync(fileStream);
                 }
 
                 post.ImageUrl = $"/uploads/posts/{uniqueFileName}";
@@ -293,6 +293,66 @@ namespace NewMyApp.Web.Controllers
             await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Details), new { id = postId });
+        }
+
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Content,ImageFile")] Post post)
+        {
+            if (id != post.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingPost = await _context.Posts.FindAsync(id);
+                    if (existingPost == null)
+                    {
+                        return NotFound();
+                    }
+
+                    var user = await _userManager.GetUserAsync(User);
+                    if (user == null || existingPost.UserId != user.Id)
+                    {
+                        return Forbid();
+                    }
+
+                    existingPost.Content = post.Content;
+                    existingPost.UpdatedAt = DateTime.Now;
+
+                    if (post.ImageFile != null)
+                    {
+                        var fileName = Path.GetRandomFileName() + Path.GetExtension(post.ImageFile.FileName);
+                        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", fileName);
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await post.ImageFile.CopyToAsync(stream);
+                        }
+                        existingPost.ImageUrl = "/uploads/" + fileName;
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!PostExists(post.Id))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(post);
+        }
+
+        private bool PostExists(int id)
+        {
+            return _context.Posts.Any(e => e.Id == id);
         }
     }
 } 

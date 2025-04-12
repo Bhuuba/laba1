@@ -1,11 +1,12 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace NewMyApp.Web.Models;
 
 public class CreatePostViewModel
 {
-    [Required(ErrorMessage = "Контент обов'язковий")]
-    [MinLength(1, ErrorMessage = "Контент не може бути порожнім")]
+    [Required(ErrorMessage = "Поле 'Текст' обов'язкове")]
+    [MinLength(1, ErrorMessage = "Текст не може бути порожнім")]
     [Display(Name = "Контент")]
     public string Content { get; set; } = string.Empty;
 
@@ -13,7 +14,7 @@ public class CreatePostViewModel
     public int? GroupId { get; set; }
 
     [Display(Name = "Зображення")]
-    public IFormFile? Image { get; set; }
+    public IFormFile? ImageFile { get; set; }
 
     public string? ImageUrl { get; set; }
 } 
