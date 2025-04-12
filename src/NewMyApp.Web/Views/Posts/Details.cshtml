@@ -1,7 +1,12 @@
+@using Microsoft.AspNetCore.Identity
+@using NewMyApp.Core.Models
 @model NewMyApp.Core.Models.Post
+@inject SignInManager<User> SignInManager
+@inject UserManager<User> UserManager
 
 @{
-    ViewData["Title"] = "Post Details";
+    ViewData["Title"] = "Деталі поста";
+    var currentUserId = UserManager.GetUserId(User);
 }
 
 <div id="particles-js"></div>
@@ -10,13 +15,13 @@
     <div class="card post-details-card animate__animated animate__fadeIn" data-aos="fade-up" data-aos-duration="800">
         <div class="card-body">
             <div class="d-flex align-items-center mb-3">
-                <img src="@(string.IsNullOrEmpty(Model.User.ProfilePicture) ? "/images/default-avatar.png" : Model.User.ProfilePicture)" 
+                <img src="@(string.IsNullOrEmpty(Model.User?.ProfilePicture) ? "/images/default-avatar.png" : Model.User.ProfilePicture)" 
                      class="rounded-circle me-3 post-avatar" 
                      alt="Profile Picture"
-                     data-tippy-content="@Model.User.FirstName @Model.User.LastName">
+                     style="width: 48px; height: 48px; object-fit: cover;">
                 <div>
-                    <h5 class="mb-0 post-author">@Model.User.FirstName @Model.User.LastName</h5>
-                    <small class="text-muted post-date">@Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    <h5 class="mb-0">@Model.User?.FirstName @Model.User?.LastName</h5>
+                    <small class="text-muted">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
                 </div>
                 <div class="ms-auto">
                     <button class="btn btn-sm btn-outline-primary" data-tippy-content="Share this post">
@@ -49,46 +54,97 @@
                 </div>
             }
 
-            <div class="post-actions d-flex justify-content-between align-items-center" data-aos="fade-up" data-aos-duration="800" data-aos-delay="300">
+            <div class="post-actions d-flex justify-content-between align-items-center mb-4">
                 <div class="d-flex gap-3">
-                    <button class="btn btn-outline-primary like-button animate__animated animate__pulse" data-tippy-content="Like this post">
-                        <i class="bi bi-heart"></i> Like
-                    </button>
-                    <button class="btn btn-outline-secondary comment-button" data-tippy-content="Comment on this post">
-                        <i class="bi bi-chat"></i> Comment
-                    </button>
-                </div>
-                <div class="post-stats">
-                    <span class="me-3 post-stat"><i class="bi bi-heart-fill text-danger"></i> @Model.Likes.Count</span>
-                    <span class="post-stat"><i class="bi bi-chat-fill text-primary"></i> @Model.Comments.Count</span>
+                    @if (SignInManager.IsSignedIn(User))
+                    {
+                        <form asp-controller="Posts" asp-action="Like" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button type="submit" 
+                                    class="btn btn-outline-primary like-button @(Model.Likes.Any(l => l.UserId == currentUserId) ? "liked" : "")"
+                                    data-post-id="@Model.Id">
+                                <i class="bi bi-heart-fill"></i> 
+                                <span class="likes-count">@Model.Likes.Count</span>
+                            </button>
+                        </form>
+                    }
+                    <a href="#comments-section" class="btn btn-outline-secondary">
+                        <i class="bi bi-chat"></i> 
+                        Коментарі (@Model.Comments.Count)
+                    </a>
                 </div>
             </div>
 
-            <div class="comments-section mt-4" data-aos="fade-up" data-aos-duration="800" data-aos-delay="400">
-                <h6 class="mb-3">Comments</h6>
-                <div class="comment-form mb-4">
-                    <div class="input-group">
-                        <input type="text" class="form-control" placeholder="Write a comment..." id="commentInput">
-                        <button class="btn btn-primary" id="submitComment">Post</button>
+            <div id="comments-section" class="comments-section">
+                <h5 class="mb-4">Коментарі (@Model.Comments.Count)</h5>
+                
+                @if (SignInManager.IsSignedIn(User))
+                {
+                    <div class="comment-form mb-4">
+                        <form asp-action="CreateComment" asp-controller="Posts" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="PostId" value="@Model.Id" />
+                            <div class="input-group">
+                                <input type="text" 
+                                       name="Content" 
+                                       class="form-control" 
+                                       placeholder="Напишіть коментар..." 
+                                       required>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> Надіслати
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        Щоб залишити коментар, будь ласка, <a asp-area="Identity" asp-page="/Account/Login">увійдіть</a> в систему
+                    </div>
+                }
+
                 <div class="comments-list">
-                    @foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+                    @if (Model.Comments != null && Model.Comments.Any())
                     {
-                        <div class="comment-item animate__animated animate__fadeInUp">
-                            <div class="d-flex align-items-start mb-2">
-                                <img src="@(string.IsNullOrEmpty(comment.User.ProfilePicture) ? "/images/default-avatar.png" : comment.User.ProfilePicture)" 
-                                     class="rounded-circle me-2 comment-avatar" 
-                                     alt="Commenter Profile"
-                                     data-tippy-content="@comment.User.FirstName @comment.User.LastName">
-                                <div class="comment-content">
-                                    <div class="d-flex align-items-center">
-                                        <h6 class="mb-0 me-2 comment-author">@comment.User.FirstName @comment.User.LastName</h6>
-                                        <small class="text-muted comment-date">@comment.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                        foreach (var comment in Model.Comments.OrderByDescending(c => c.CreatedAt))
+                        {
+                            <div class="comment-item mb-3 p-3 bg-light rounded">
+                                <div class="d-flex">
+                                    <img src="@(string.IsNullOrEmpty(comment.User?.ProfilePicture) ? "/images/default-avatar.png" : comment.User.ProfilePicture)" 
+                                         class="rounded-circle me-2" 
+                                         alt="Profile Picture"
+                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6 class="mb-0">@comment.User?.FirstName @comment.User?.LastName</h6>
+                                            <div>
+                                                <small class="text-muted me-2">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                                @if (currentUserId == comment.UserId || currentUserId == Model.UserId)
+                                                {
+                                                    <form asp-action="DeleteComment" asp-controller="Posts" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="commentId" value="@comment.Id" />
+                                                        <input type="hidden" name="postId" value="@Model.Id" />
+                                                        <button type="submit" class="btn btn-link text-danger p-0 border-0">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </div>
+                                        <p class="mb-0 mt-1">@comment.Content</p>
                                     </div>
-                                    <p class="mb-0 comment-text">@comment.Content</p>
                                 </div>
                             </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted">
+                            <p>Поки що немає коментарів. Будьте першим!</p>
                         </div>
                     }
                 </div>
@@ -172,64 +228,149 @@
             z-index: -1;
             pointer-events: none;
         }
+
+        .comment-avatar {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+        }
+
+        .post-avatar {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+        }
+
+        .post-details-card {
+            background: white;
+            border: none;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .comment-item {
+            transition: transform 0.2s ease;
+        }
+
+        .comment-item:hover {
+            transform: translateX(5px);
+        }
+
+        .post-actions button {
+            transition: all 0.3s ease;
+        }
+
+        .post-actions button:hover {
+            transform: scale(1.05);
+        }
+
+        .comment-form .input-group {
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comment-form input {
+            border: none;
+            padding: 12px 15px;
+        }
+
+        .comment-form input:focus {
+            box-shadow: none;
+        }
+
+        .comment-form button {
+            padding: 12px 20px;
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+        }
+
+        .alert a {
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .alert a:hover {
+            text-decoration: underline;
+        }
+
+        .like-button {
+            transition: all 0.3s ease;
+        }
+
+        .like-button.liked {
+            background-color: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        .like-button:hover {
+            transform: scale(1.05);
+        }
+
+        .animate__heartBeat {
+            animation-duration: 0.5s;
+        }
+
+        .btn-link {
+            text-decoration: none;
+        }
+
+        .btn-link:hover {
+            opacity: 0.7;
+        }
     </style>
 }
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Add animation to comments as they load
-            const comments = document.querySelectorAll('.comment-item');
-            comments.forEach((comment, index) => {
-                comment.style.animationDelay = `${index * 0.1}s`;
+            document.querySelectorAll('.like-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const form = this.closest('form');
+                    const postId = this.dataset.postId;
+                    const likesCount = this.querySelector('.likes-count');
+
+                    fetch(form.action, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': form.querySelector('input[name="__RequestVerificationToken"]').value
+                        },
+                        body: new URLSearchParams(new FormData(form))
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            likesCount.textContent = data.likesCount;
+                            this.classList.toggle('liked');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
             });
 
-            // Like button animation
-            const likeButton = document.querySelector('.like-button');
-            likeButton.addEventListener('click', function() {
-                this.classList.add('animate__animated', 'animate__heartBeat');
-                setTimeout(() => {
-                    this.classList.remove('animate__animated', 'animate__heartBeat');
-                }, 1000);
-                
-                // Show notification
-                const notyf = new Notyf();
-                notyf.success('You liked this post!');
+            // Плавна прокрутка до коментарів
+            document.querySelector('a[href="#comments-section"]')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelector('#comments-section').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                document.querySelector('input[name="Content"]')?.focus();
             });
-            
-            // Comment submission
-            const commentInput = document.getElementById('commentInput');
-            const submitComment = document.getElementById('submitComment');
-            
-            submitComment.addEventListener('click', function() {
-                if (commentInput.value.trim() !== '') {
-                    // Here you would typically send the comment to the server
-                    // For now, we'll just show a notification
-                    const notyf = new Notyf();
-                    notyf.success('Comment posted successfully!');
-                    commentInput.value = '';
-                } else {
-                    const notyf = new Notyf();
-                    notyf.error('Please enter a comment first.');
+
+            // Відправка форми коментаря по Enter
+            document.querySelector('input[name="Content"]')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.form.submit();
                 }
             });
-            
-            // Initialize Swiper for image gallery if there are multiple images
-            if (document.querySelectorAll('.post-image').length > 1) {
-                new Swiper('.post-image-container', {
-                    slidesPerView: 1,
-                    spaceBetween: 30,
-                    loop: true,
-                    pagination: {
-                        el: '.swiper-pagination',
-                        clickable: true,
-                    },
-                    navigation: {
-                        nextEl: '.swiper-button-next',
-                        prevEl: '.swiper-button-prev',
-                    },
-                });
-            }
         });
     </script>
 } 

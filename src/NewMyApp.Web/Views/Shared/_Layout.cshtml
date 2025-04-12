@@ -27,40 +27,34 @@
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-lg-inline-flex justify-content-between">
-                    <ul class="navbar-nav">
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Головна</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Posts" asp-action="Index">Стрічка</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Posts" asp-action="MyPosts">Мої пости</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Friends" asp-action="Index">
-                                <i class="fas fa-users"></i> Друзі
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Groups" asp-action="Index">
-                                <i class="bi bi-people me-1"></i>Групи
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Posts" asp-action="Create">
-                                <i class="bi bi-plus-circle me-1"></i>Створити пост
-                            </a>
-                        </li>
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Posts" asp-action="Index">Пости</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Groups" asp-action="Index">Групи</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Friends" asp-action="Index">Друзі</a>
+                            </li>
+                        }
                     </ul>
-                    <div class="d-flex align-items-center">
-                        <form class="d-flex me-3" asp-controller="Search" asp-action="Index" method="get">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form class="d-flex mx-3" action="@Url.Action("Index", "Search")" method="get">
                             <input class="form-control me-2" type="search" name="q" placeholder="Пошук..." aria-label="Search">
-                            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i></button>
+                            <button class="btn btn-outline-primary" type="submit">
+                                <i class="bi bi-search"></i>
+                            </button>
                         </form>
-                        <partial name="_LoginPartial" />
-                    </div>
+                    }
+                    <partial name="_LoginPartial" />
                 </div>
             </div>
         </nav>

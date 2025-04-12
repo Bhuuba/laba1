@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using NewMyApp.Core.Models;
 using NewMyApp.Infrastructure.Data;
 using NewMyApp.Web.Models;
+using NewMyApp.Core.Services;
 
 namespace NewMyApp.Web.Controllers;
 
@@ -19,17 +20,20 @@ public class ProfileController : Controller
     private readonly ApplicationDbContext _context;
     private readonly IWebHostEnvironment _environment;
     private readonly ILogger<ProfileController> _logger;
+    private readonly ICertificateService _certificateService;
 
     public ProfileController(
         UserManager<User> userManager,
         ApplicationDbContext context,
         IWebHostEnvironment environment,
-        ILogger<ProfileController> logger)
+        ILogger<ProfileController> logger,
+        ICertificateService certificateService)
     {
         _userManager = userManager;
         _context = context;
         _environment = environment;
         _logger = logger;
+        _certificateService = certificateService;
     }
 
     public async Task<IActionResult> Index()
@@ -164,5 +168,22 @@ public class ProfileController : Controller
         }
 
         return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Certificate()
+    {
+        var user = await _userManager.GetUserAsync(User);
+        if (user == null)
+            return NotFound();
+
+        if (!await _certificateService.IsEligibleForCertificateAsync(user.Id))
+        {
+            TempData["Error"] = "You need at least 10 likes on your posts to be eligible for a certificate.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var certificate = await _certificateService.GenerateCertificateAsync(user.Id);
+        return View(certificate);
     }
 } 

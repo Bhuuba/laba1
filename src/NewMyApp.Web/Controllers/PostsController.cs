@@ -37,6 +37,7 @@ namespace NewMyApp.Web.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Group)
                 .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
                 .Include(p => p.Likes)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
@@ -175,7 +176,40 @@ namespace NewMyApp.Web.Controllers
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            
+            // Повертаємо JSON з кількістю лайків
+            return Json(new { success = true, likesCount = post.Likes.Count });
+        }
+
+        // POST: Posts/CreateComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateComment([FromForm] CreateCommentViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RedirectToAction(nameof(Details), new { id = model.PostId });
+            }
+
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var comment = new Comment
+            {
+                Content = model.Content,
+                PostId = model.PostId,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow,
+                ParentCommentId = model.ParentCommentId
+            };
+
+            _context.Comments.Add(comment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = model.PostId });
         }
 
         // GET: Posts/MyPosts
@@ -191,12 +225,74 @@ namespace NewMyApp.Web.Controllers
                 .Include(p => p.User)
                 .Include(p => p.Group)
                 .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
                 .Include(p => p.Likes)
                 .Where(p => p.UserId == userId)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToListAsync();
 
             return View("Index", posts);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> LikeComment(int id)
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Unauthorized();
+            }
+
+            var comment = await _context.Comments
+                .Include(c => c.Likes)
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            var existingLike = comment.Likes.FirstOrDefault(l => l.UserId == userId);
+            if (existingLike != null)
+            {
+                comment.Likes.Remove(existingLike);
+            }
+            else
+            {
+                comment.Likes.Add(new Like { UserId = userId });
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = comment.PostId });
+        }
+
+        // POST: Posts/DeleteComment
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteComment(int commentId, int postId)
+        {
+            var comment = await _context.Comments
+                .Include(c => c.Post)
+                .FirstOrDefaultAsync(c => c.Id == commentId);
+
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            var userId = _userManager.GetUserId(User);
+            // Перевіряємо чи користувач є автором коментаря або автором поста
+            if (userId != comment.UserId && userId != comment.Post.UserId)
+            {
+                return Forbid();
+            }
+
+            _context.Comments.Remove(comment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id = postId });
         }
     }
 } 

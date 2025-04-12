@@ -28,6 +28,7 @@ builder.Services.AddDefaultIdentity<User>(options => {
 // Register services
 builder.Services.AddScoped<IPostViewService, PostViewService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
+builder.Services.AddScoped<ICertificateService, CertificateService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

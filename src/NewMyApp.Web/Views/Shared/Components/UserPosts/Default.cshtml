@@ -1,4 +1,11 @@
 @model IEnumerable<NewMyApp.Core.Models.Post>
+@using Microsoft.AspNetCore.Identity
+@using NewMyApp.Core.Models
+@inject UserManager<User> UserManager
+
+@{
+    var currentUserId = UserManager.GetUserId(User);
+}
 
 @if (!Model.Any())
 {
@@ -22,7 +29,7 @@ else
                         <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
                     </div>
                 </div>
-                @if (User.Identity?.Name == post.User?.Email)
+                @if (currentUserId == post.UserId)
                 {
                     <div class="dropdown">
                         <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
@@ -50,16 +57,19 @@ else
                 
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <form asp-controller="Posts" asp-action="Like" asp-route-id="@post.Id" method="post" class="d-inline">
+                        <form asp-controller="Posts" asp-action="Like" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
-                            <button type="submit" class="btn btn-link text-primary p-0">
-                                <i class="@(User.Identity?.Name != null && post.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
-                                <span>@post.Likes.Count</span>
+                            <input type="hidden" name="id" value="@post.Id" />
+                            <button type="submit" 
+                                    class="btn btn-outline-primary btn-sm me-2 like-button @(post.Likes.Any(l => l.UserId == currentUserId) ? "liked" : "")"
+                                    data-post-id="@post.Id">
+                                <i class="fas fa-heart"></i>
+                                <span class="likes-count">@post.Likes.Count</span>
                             </button>
                         </form>
-                        <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-link text-primary">
-                            <i class="far fa-comment"></i>
-                            <span>@post.Comments.Count</span>
+                        <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-comment"></i>
+                            <span class="comments-count">@post.Comments.Count</span>
                         </a>
                     </div>
                     @if (post.Group != null)
@@ -72,4 +82,50 @@ else
             </div>
         </div>
     }
-} 
+}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.like-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = this.closest('form');
+                const postId = this.dataset.postId;
+                const likesCount = this.querySelector('.likes-count');
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': form.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: new URLSearchParams(new FormData(form))
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        likesCount.textContent = data.likesCount;
+                        this.classList.toggle('liked');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+
+<style>
+    .like-button {
+        transition: all 0.3s ease;
+    }
+    .like-button.liked {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+    .like-button:hover {
+        background-color: #dc3545;
+        color: white;
+        border-color: #dc3545;
+    }
+</style> 

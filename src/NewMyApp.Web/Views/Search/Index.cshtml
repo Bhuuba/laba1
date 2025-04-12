@@ -1,0 +1,130 @@
+@model NewMyApp.Web.Models.SearchResultViewModel
+
+@{
+    ViewData["Title"] = "Пошук";
+}
+
+<div class="container mt-4">
+    <form method="get" action="@Url.Action("Index", "Search")" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="q" class="form-control" placeholder="Пошук..." value="@Model.SearchTerm">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search"></i> Пошук
+            </button>
+        </div>
+    </form>
+
+    @if (!string.IsNullOrEmpty(Model.SearchTerm))
+    {
+        <div class="row">
+            <!-- Користувачі -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Користувачі (@Model.Users.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Users.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var user in Model.Users)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(string.IsNullOrEmpty(user.ProfilePicture) ? "/images/default-avatar.png" : user.ProfilePicture)" 
+                                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" 
+                                                 alt="@user.FirstName">
+                                            <div>
+                                                <h6 class="mb-0">@user.FirstName @user.LastName</h6>
+                                                <small class="text-muted">@user.Email</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Користувачів не знайдено</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пости -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Пости (@Model.Posts.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Posts.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var post in Model.Posts)
+                                {
+                                    <a href="@Url.Action("Details", "Posts", new { id = post.Id })" class="list-group-item list-group-item-action">
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">@post.User.FirstName @post.User.LastName</h6>
+                                            <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy")</small>
+                                        </div>
+                                        <p class="mb-1">@(post.Content.Length > 100 ? post.Content.Substring(0, 100) + "..." : post.Content)</p>
+                                        <small class="text-muted">
+                                            <i class="bi bi-heart-fill text-danger"></i> @post.Likes.Count
+                                            <i class="bi bi-chat-fill ms-2"></i> @post.Comments.Count
+                                        </small>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Постів не знайдено</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Групи -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Групи (@Model.Groups.Count)</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.Groups.Any())
+                        {
+                            <div class="list-group">
+                                @foreach (var group in Model.Groups)
+                                {
+                                    <a href="@Url.Action("Details", "Groups", new { id = group.Id })" class="list-group-item list-group-item-action">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(string.IsNullOrEmpty(group.CoverImage) ? "/images/default-group.png" : group.CoverImage)" 
+                                                 class="rounded me-2" style="width: 40px; height: 40px; object-fit: cover;" 
+                                                 alt="@group.Name">
+                                            <div>
+                                                <h6 class="mb-0">@group.Name</h6>
+                                                <small class="text-muted">@group.UserGroups.Count учасників</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted mb-0">Груп не знайдено</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="text-center mt-5">
+            <h3>Введіть пошуковий запит</h3>
+            <p class="text-muted">Ви можете шукати користувачів, пости та групи</p>
+        </div>
+    }
+</div> 

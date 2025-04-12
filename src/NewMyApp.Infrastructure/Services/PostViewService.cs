@@ -59,32 +59,35 @@ public class PostViewService : IPostViewService
     {
         var user = await _context.Users
             .Include(u => u.Posts)
+            .ThenInclude(p => p.Likes)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
         if (user == null)
             return null;
 
-        var totalViews = await _context.PostViews
-            .CountAsync(v => v.Post.UserId == userId);
-
+        var totalLikes = user.Posts.Sum(p => p.Likes.Count);
         var totalPosts = user.Posts.Count;
 
-        if (totalPosts == 0 || totalViews == 0)
+        if (totalPosts == 0 || totalLikes == 0)
             return null;
 
-        var achievement = totalViews >= 1000 ? "Gold Creator" :
-                         totalViews >= 500 ? "Silver Creator" :
-                         totalViews >= 100 ? "Bronze Creator" :
-                         "Aspiring Creator";
+        var achievement = totalLikes >= 100 ? "Diamond Content Creator" :
+                         totalLikes >= 50 ? "Gold Content Creator" :
+                         totalLikes >= 25 ? "Silver Content Creator" :
+                         "Bronze Content Creator";
+
+        var description = $"This user has created {totalPosts} posts that have received {totalLikes} likes from the community. " +
+                         "Their contributions have helped make our platform a more engaging and vibrant space for everyone.";
 
         return new Certificate
         {
             UserId = userId,
             UserName = $"{user.FirstName} {user.LastName}",
-            TotalViews = totalViews,
+            TotalLikes = totalLikes,
             TotalPosts = totalPosts,
             GeneratedAt = DateTime.UtcNow,
-            Achievement = achievement
+            Achievement = achievement,
+            Description = description
         };
     }
 } 
