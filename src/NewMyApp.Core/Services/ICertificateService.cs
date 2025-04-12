@@ -5,6 +5,6 @@ namespace NewMyApp.Core.Services;
 
 public interface ICertificateService
 {
-    Task<Certificate> GenerateCertificateAsync(string userId);
+    Task<byte[]> GenerateCertificateAsync(string userId);
     Task<bool> IsEligibleForCertificateAsync(string userId);
 } 
