@@ -1,0 +1,80 @@
+@model IEnumerable<NewMyApp.Core.Models.Post>
+
+@{
+    ViewData["Title"] = "Стрічка новин";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="mb-4">@ViewData["Title"]</h2>
+            
+            <div class="mb-4">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Створити новий пост
+                </a>
+            </div>
+
+            @foreach (var item in Model)
+            {
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            @if (!string.IsNullOrEmpty(item.User.ProfilePicture))
+                            {
+                                <img src="@item.User.ProfilePicture" class="rounded-circle mr-2" style="width: 40px; height: 40px;" alt="Profile Picture">
+                            }
+                            <div>
+                                <h5 class="mb-0">@item.User.FirstName @item.User.LastName</h5>
+                                <small class="text-muted">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                        @if (User.Identity.Name == item.User.UserName)
+                        {
+                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-link text-danger" onclick="return confirm('Ви впевнені, що хочете видалити цей пост?');">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        }
+                    </div>
+                    
+                    <div class="card-body">
+                        <p class="card-text">@item.Content</p>
+                        @if (!string.IsNullOrEmpty(item.ImageUrl))
+                        {
+                            <img src="@item.ImageUrl" class="img-fluid rounded mb-3" alt="Post Image">
+                        }
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <form asp-action="Like" asp-route-id="@item.Id" method="post" class="d-inline">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-link text-primary p-0">
+                                        <i class="@(item.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
+                                        <span>@item.Likes.Count</span>
+                                    </button>
+                                </form>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-link text-primary">
+                                    <i class="far fa-comment"></i>
+                                    <span>@item.Comments.Count</span>
+                                </a>
+                            </div>
+                            @if (item.Group != null)
+                            {
+                                <a asp-controller="Groups" asp-action="Details" asp-route-id="@item.Group.Id" class="text-muted">
+                                    <i class="fas fa-users"></i> @item.Group.Name
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
+} 
