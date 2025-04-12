@@ -1,15 +1,24 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace NewMyApp.Core.Models
 {
     public class Group
     {
         public int Id { get; set; }
+
+        [Required]
+        [StringLength(100)]
         public string Name { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
+
+        [StringLength(500)]
+        public string? Description { get; set; }
+
+        public string? CoverImage { get; set; }
+
         public DateTime CreatedAt { get; set; }
+
         public DateTime? UpdatedAt { get; set; }
         
         // Зовнішні ключі
@@ -17,13 +26,11 @@ namespace NewMyApp.Core.Models
         
         // Навігаційні властивості
         public virtual User Creator { get; set; } = null!;
-        public virtual ICollection<Post> Posts { get; set; }
-        public virtual ICollection<UserGroup> UserGroups { get; set; }
+        public virtual ICollection<Post> Posts { get; set; } = new HashSet<Post>();
+        public virtual ICollection<UserGroup> UserGroups { get; set; } = new HashSet<UserGroup>();
         
         public Group()
         {
-            Posts = new HashSet<Post>();
-            UserGroups = new HashSet<UserGroup>();
             CreatedAt = DateTime.UtcNow;
         }
     }

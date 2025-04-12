@@ -8,11 +8,12 @@ namespace NewMyApp.Core.Models
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string ProfilePicture { get; set; } = string.Empty;
-        public string Bio { get; set; } = string.Empty;
-        public DateTime DateOfBirth { get; set; }
+        public string? ProfilePicture { get; set; }
+        public string? Bio { get; set; }
+        public DateTime? DateOfBirth { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime? LastActive { get; set; }
+        public bool IsEmailVisible { get; set; }
         
         // Навігаційні властивості
         public virtual ICollection<Post> Posts { get; set; } = new HashSet<Post>();

@@ -4,33 +4,41 @@ namespace NewMyApp.Web.Areas.Identity.Pages.Account.Models
 {
     public class LoginModel
     {
-        [Required(ErrorMessage = "Email обов'язковий")]
-        [EmailAddress(ErrorMessage = "Невірний формат email")]
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Пароль обов'язковий")]
+        [Required(ErrorMessage = "Password is required")]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
-        [Display(Name = "Запам'ятати мене")]
+        [Display(Name = "Remember me")]
         public bool RememberMe { get; set; }
     }
 
     public class RegisterModel
     {
-        [Required(ErrorMessage = "Email обов'язковий")]
-        [EmailAddress(ErrorMessage = "Невірний формат email")]
+        [Required(ErrorMessage = "First name is required")]
+        [Display(Name = "First Name")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Last name is required")]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Пароль обов'язковий")]
-        [StringLength(100, ErrorMessage = "Пароль має містити мінімум {2} символів", MinimumLength = 6)]
+        [Required(ErrorMessage = "Password is required")]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
-        [Display(Name = "Пароль")]
+        [Display(Name = "Password")]
         public string Password { get; set; } = string.Empty;
 
         [DataType(DataType.Password)]
-        [Display(Name = "Підтвердження паролю")]
-        [Compare("Password", ErrorMessage = "Паролі не співпадають")]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 } 

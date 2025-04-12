@@ -1,0 +1,75 @@
+@model IEnumerable<NewMyApp.Core.Models.Post>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        Користувач ще не створив жодного поста.
+    </div>
+}
+else
+{
+    foreach (var post in Model)
+    {
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <img src="@(string.IsNullOrEmpty(post.User?.ProfilePicture) ? "/images/default-avatar.png" : post.User.ProfilePicture)" 
+                         class="rounded-circle me-2" 
+                         alt="Profile picture" 
+                         style="width: 40px; height: 40px; object-fit: cover;">
+                    <div>
+                        <h6 class="mb-0">@post.User?.FirstName @post.User?.LastName</h6>
+                        <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                    </div>
+                </div>
+                @if (User.Identity?.Name == post.User?.Email)
+                {
+                    <div class="dropdown">
+                        <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <form asp-controller="Posts" asp-action="Delete" asp-route-id="@post.Id" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей пост?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fas fa-trash-alt"></i> Видалити
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                }
+            </div>
+            <div class="card-body">
+                <p class="card-text">@post.Content</p>
+                @if (!string.IsNullOrEmpty(post.ImageUrl))
+                {
+                    <img src="@post.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
+                }
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <form asp-controller="Posts" asp-action="Like" asp-route-id="@post.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-link text-primary p-0">
+                                <i class="@(User.Identity?.Name != null && post.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
+                                <span>@post.Likes.Count</span>
+                            </button>
+                        </form>
+                        <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-link text-primary">
+                            <i class="far fa-comment"></i>
+                            <span>@post.Comments.Count</span>
+                        </a>
+                    </div>
+                    @if (post.Group != null)
+                    {
+                        <a asp-controller="Groups" asp-action="Details" asp-route-id="@post.Group.Id" class="text-muted">
+                            <i class="fas fa-users"></i> @post.Group.Name
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+} 

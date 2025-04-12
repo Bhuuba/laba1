@@ -58,6 +58,9 @@ namespace NewMyApp.Web.Controllers
                 .Include(p => p.Comments)
                     .ThenInclude(c => c.User)
                 .Include(p => p.Likes)
+                    .ThenInclude(l => l.User)
+                .Include(p => p.PostTags)
+                    .ThenInclude(pt => pt.Tag)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
             if (post == null)
@@ -164,20 +167,36 @@ namespace NewMyApp.Web.Controllers
 
             if (existingLike != null)
             {
-                _context.Likes.Remove(existingLike);
+                post.Likes.Remove(existingLike);
             }
             else
             {
-                post.Likes.Add(new Like
-                {
-                    UserId = userId,
-                    PostId = id,
-                    CreatedAt = DateTime.UtcNow
-                });
+                post.Likes.Add(new Like { UserId = userId, PostId = post.Id });
             }
 
             await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Details), new { id });
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Posts/MyPosts
+        public async Task<IActionResult> MyPosts()
+        {
+            var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Challenge();
+            }
+
+            var posts = await _context.Posts
+                .Include(p => p.User)
+                .Include(p => p.Group)
+                .Include(p => p.Comments)
+                .Include(p => p.Likes)
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            return View("Index", posts);
         }
     }
 } 

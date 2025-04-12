@@ -1,0 +1,26 @@
+@model NewMyApp.Core.Models.Certificate
+
+@{
+    ViewData["Title"] = "Content Creator Certificate";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h1 class="display-4 mb-4">Certificate of Achievement</h1>
+                    <div class="border p-4 mb-4">
+                        <h2 class="mb-3">@Model.Achievement</h2>
+                        <p class="lead">This certificate is awarded to @Model.UserName for their outstanding contribution to our community.</p>
+                        <div class="mt-4">
+                            <p><strong>Total Views:</strong> @Model.TotalViews</p>
+                            <p><strong>Total Posts:</strong> @Model.TotalPosts</p>
+                            <p><strong>Generated On:</strong> @Model.GeneratedAt.ToString("MMMM dd, yyyy")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

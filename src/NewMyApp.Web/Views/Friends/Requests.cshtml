@@ -1,0 +1,63 @@
+@model IEnumerable<NewMyApp.Core.Models.Friendship>
+
+@{
+    ViewData["Title"] = "Запити в друзі";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>@ViewData["Title"]</h2>
+                <a asp-action="Index" class="btn btn-outline-primary">
+                    <i class="fas fa-users"></i> Мої друзі
+                </a>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    У вас немає нових запитів у друзі.
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var request in Model)
+                    {
+                        <div class="col-md-6 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <img src="@(string.IsNullOrEmpty(request.Sender.ProfilePicture) ? "/images/default-avatar.png" : request.Sender.ProfilePicture)" 
+                                             class="rounded-circle me-3" 
+                                             alt="@request.Sender.FirstName's profile picture" 
+                                             style="width: 64px; height: 64px; object-fit: cover;">
+                                        <div>
+                                            <h5 class="card-title mb-1">@request.Sender.FirstName @request.Sender.LastName</h5>
+                                            <p class="text-muted mb-2">@request.Sender.Email</p>
+                                            <div class="btn-group">
+                                                <form asp-action="Accept" asp-route-userId="@request.SenderId" method="post" class="d-inline me-2">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-success btn-sm">
+                                                        <i class="fas fa-check"></i> Прийняти
+                                                    </button>
+                                                </form>
+                                                <form asp-action="Reject" asp-route-userId="@request.SenderId" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-danger btn-sm">
+                                                        <i class="fas fa-times"></i> Відхилити
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div> 

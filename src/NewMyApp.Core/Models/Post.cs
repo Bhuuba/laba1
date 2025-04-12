@@ -21,6 +21,7 @@ namespace NewMyApp.Core.Models
         public virtual ICollection<Comment> Comments { get; set; } = new HashSet<Comment>();
         public virtual ICollection<Like> Likes { get; set; } = new HashSet<Like>();
         public virtual ICollection<PostTag> PostTags { get; set; } = new HashSet<PostTag>();
+        public virtual ICollection<PostView> Views { get; set; } = new HashSet<PostView>();
         
         public Post()
         {

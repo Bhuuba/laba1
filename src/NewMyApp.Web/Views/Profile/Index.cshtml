@@ -1,0 +1,151 @@
+@model NewMyApp.Web.Models.ProfileViewModel
+
+@{
+    ViewData["Title"] = $"{Model.FirstName} {Model.LastName}'s Profile";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body text-center">
+                    <div class="position-relative mb-3">
+                        <img src="@(string.IsNullOrEmpty(Model.ProfilePicture) ? "/images/default-avatar.png" : Model.ProfilePicture)" 
+                             class="rounded-circle img-thumbnail" 
+                             alt="Profile Picture" 
+                             style="width: 200px; height: 200px; object-fit: cover;">
+                        <button type="button" 
+                                class="btn btn-primary btn-sm position-absolute bottom-0 start-50 translate-middle-x" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#updatePhotoModal">
+                            <i class="bi bi-camera-fill"></i> Змінити фото
+                        </button>
+                    </div>
+                    <h4 class="mb-0">@Model.FirstName @Model.LastName</h4>
+                    @if (!string.IsNullOrEmpty(Model.Bio))
+                    {
+                        <p class="text-muted">@Model.Bio</p>
+                    }
+                    <div class="mt-3">
+                        <p><strong>Total Views:</strong> @ViewBag.TotalViews</p>
+                        <p><strong>Total Posts:</strong> @Model.TotalPosts</p>
+                        <p><strong>Total Friends:</strong> @Model.TotalFriends</p>
+                    </div>
+                    <p class="text-muted">@Model.Email</p>
+                    <button type="button" 
+                            class="btn btn-outline-primary mt-2" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#editProfileForm">
+                        <i class="bi bi-pencil"></i> Edit Profile
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card mt-3 collapse" id="editProfileForm">
+                <div class="card-header">
+                    <h5 class="mb-0">Edit Profile</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Update" method="post" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label">Ім'я</label>
+                            <input asp-for="FirstName" class="form-control" required />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label">Прізвище</label>
+                            <input asp-for="LastName" class="form-control" required />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="Bio" class="form-label">Про себе</label>
+                            <textarea asp-for="Bio" class="form-control" rows="3"></textarea>
+                            <span asp-validation-for="Bio" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="DateOfBirth" class="form-label">Дата народження</label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Зберегти зміни
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recent Posts</h4>
+                </div>
+                <div class="card-body">
+                    @await Component.InvokeAsync("UserPosts", new { userId = Model.Id })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Update Photo Modal -->
+<div class="modal fade" id="updatePhotoModal" tabindex="-1" aria-labelledby="updatePhotoModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="updatePhotoModalLabel">Оновити фото профілю</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="UpdatePhoto" method="post" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="photoFile" class="form-label">Виберіть нове фото</label>
+                        <input type="file" class="form-control" id="photoFile" name="photoFile" accept="image/*" required>
+                        <div class="form-text">Підтримуються формати: JPG, PNG. Максимальний розмір: 5MB</div>
+                    </div>
+                    <div id="imagePreview" class="text-center mt-3" style="display: none;">
+                        <img src="" alt="Preview" class="img-fluid rounded-circle" style="max-width: 200px; max-height: 200px;">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                    <button type="submit" class="btn btn-primary">Зберегти</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Image preview
+        document.getElementById('photoFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('imagePreview');
+                    preview.style.display = 'block';
+                    preview.querySelector('img').src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Form validation
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+} 

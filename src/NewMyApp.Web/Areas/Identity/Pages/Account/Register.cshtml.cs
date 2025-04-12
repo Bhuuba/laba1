@@ -1,9 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using NewMyApp.Core.Models;
-using NewMyApp.Web.Areas.Identity.Pages.Account.Models;
-using System.ComponentModel.DataAnnotations;
 
 namespace NewMyApp.Web.Areas.Identity.Pages.Account;
 
@@ -24,27 +24,63 @@ public class RegisterModel : PageModel
     }
 
     [BindProperty]
-    public Models.RegisterModel Input { get; set; } = new();
+    public InputModel Input { get; set; } = new();
 
-    public string? ReturnUrl { get; set; }
+    public string ReturnUrl { get; set; } = "~/";
 
-    public IActionResult OnGet(string? returnUrl = null)
+    public class InputModel
     {
-        ReturnUrl = returnUrl;
-        return Page();
+        [Required(ErrorMessage = "Ім'я обов'язкове")]
+        [Display(Name = "Ім'я")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Прізвище обов'язкове")]
+        [Display(Name = "Прізвище")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email обов'язковий")]
+        [EmailAddress(ErrorMessage = "Невірний формат email")]
+        [Display(Name = "Email")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Пароль обов'язковий")]
+        [StringLength(100, ErrorMessage = "Пароль має містити мінімум {2} символів", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Пароль")]
+        public string Password { get; set; } = string.Empty;
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Підтвердження паролю")]
+        [Compare("Password", ErrorMessage = "Паролі не співпадають")]
+        public string ConfirmPassword { get; set; } = string.Empty;
     }
 
-    public async Task<IActionResult> OnPostAsync(string? returnUrl = null)
+    public Task OnGetAsync(string returnUrl)
     {
-        returnUrl ??= Url.Content("~/");
+        ReturnUrl = returnUrl;
+        return Task.CompletedTask;
+    }
+
+    public async Task<IActionResult> OnPostAsync(string returnUrl)
+    {
+        returnUrl = returnUrl ?? "~/";
+        
         if (ModelState.IsValid)
         {
-            var user = new User { UserName = Input.Email, Email = Input.Email };
+            var user = new User
+            {
+                UserName = Input.Email,
+                Email = Input.Email,
+                FirstName = Input.FirstName,
+                LastName = Input.LastName,
+                CreatedAt = DateTime.UtcNow
+            };
+
             var result = await _userManager.CreateAsync(user, Input.Password);
 
             if (result.Succeeded)
             {
-                _logger.LogInformation("Користувач створив новий обліковий запис з паролем.");
+                _logger.LogInformation("Створено нового користувача.");
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return LocalRedirect(returnUrl);

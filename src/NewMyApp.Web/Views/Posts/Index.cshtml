@@ -20,23 +20,39 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            @if (!string.IsNullOrEmpty(item.User.ProfilePicture))
-                            {
-                                <img src="@item.User.ProfilePicture" class="rounded-circle mr-2" style="width: 40px; height: 40px;" alt="Profile Picture">
-                            }
-                            <div>
-                                <h5 class="mb-0">@item.User.FirstName @item.User.LastName</h5>
-                                <small class="text-muted">@item.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="@(string.IsNullOrEmpty(item.User?.ProfilePicture) ? "/images/default-avatar.png" : item.User.ProfilePicture)" 
+                                     class="rounded-circle me-2" 
+                                     alt="@(item.User?.FirstName ?? "User")'s profile picture" 
+                                     style="width: 40px; height: 40px; object-fit: cover;">
+                                <div>
+                                    <h6 class="mb-0">@(item.User?.FirstName ?? "") @(item.User?.LastName ?? "")</h6>
+                                    <small class="text-muted">@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                                </div>
                             </div>
                         </div>
-                        @if (User.Identity.Name == item.User.UserName)
+                        @if (User.Identity?.Name == item.User?.Email)
                         {
-                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-link text-danger" onclick="return confirm('Ви впевнені, що хочете видалити цей пост?');">
-                                    <i class="fas fa-trash"></i>
+                            <div class="dropdown">
+                                <button class="btn btn-link text-decoration-none dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
                                 </button>
-                            </form>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="@Url.Action("Edit", new { id = item.Id })">
+                                            <i class="bi bi-pencil"></i> Редагувати
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <form asp-action="Delete" method="post" class="d-inline">
+                                            <input type="hidden" name="id" value="@item.Id" />
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="bi bi-trash"></i> Видалити
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
                         }
                     </div>
                     
@@ -52,7 +68,7 @@
                                 <form asp-action="Like" asp-route-id="@item.Id" method="post" class="d-inline">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn btn-link text-primary p-0">
-                                        <i class="@(item.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
+                                        <i class="@(User.Identity?.Name != null && item.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
                                         <span>@item.Likes.Count</span>
                                     </button>
                                 </form>
@@ -69,6 +85,18 @@
                             }
                         </div>
                     </div>
+                </div>
+            }
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-file-earmark-text display-1 text-muted"></i>
+                    <h3 class="mt-3">Немає постів</h3>
+                    <p class="text-muted">Створіть перший пост, щоб почати спілкування</p>
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Створити пост
+                    </a>
                 </div>
             }
         </div>

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NewMyApp.Core.Models;
+using NewMyApp.Core.Services;
 using NewMyApp.Infrastructure.Data;
+using NewMyApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity.UI;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<User>(options => {
     options.SignIn.RequireConfirmedAccount = false;
@@ -20,6 +24,10 @@ builder.Services.AddDefaultIdentity<User>(options => {
     options.Password.RequiredLength = 6;
 })
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Register services
+builder.Services.AddScoped<IPostViewService, PostViewService>();
+builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();

@@ -1,0 +1,128 @@
+@using NewMyApp.Core.Models
+@model Group
+
+<div class="card mb-4">
+    <div class="card-img-top position-relative" style="height: 300px; background-color: #f8f9fa;">
+        @if (!string.IsNullOrEmpty(Model.CoverImage))
+        {
+            <img src="@Model.CoverImage" class="w-100 h-100" style="object-fit: cover;" alt="@Model.Name">
+        }
+        else
+        {
+            <div class="w-100 h-100 d-flex align-items-center justify-content-center bg-light">
+                <i class="bi bi-people-fill" style="font-size: 5rem;"></i>
+            </div>
+        }
+        <div class="position-absolute bottom-0 start-0 w-100 p-4" style="background: linear-gradient(transparent, rgba(0,0,0,0.7));">
+            <h1 class="text-white mb-0">@Model.Name</h1>
+            <p class="text-white-50 mb-0">@(Model.UserGroups?.Count ?? 0) учасників</p>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <p class="card-text">@Model.Description</p>
+                @if (Model.UserGroups?.Any(ug => ug.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) == true)
+                {
+                    <form asp-action="Leave" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-outline-danger">
+                            <i class="bi bi-box-arrow-right"></i> Покинути групу
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <form asp-action="Join" method="post" class="d-inline">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Приєднатися
+                        </button>
+                    </form>
+                }
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Адміністратори</h5>
+                        <div class="list-group list-group-flush">
+                            @foreach (var admin in Model.UserGroups?.Where(ug => ug.Role == GroupRole.Admin) ?? Enumerable.Empty<UserGroup>())
+                            {
+                                <div class="list-group-item d-flex align-items-center">
+                                    <img src="@(string.IsNullOrEmpty(admin.User?.ProfilePicture) ? "/images/default-avatar.png" : admin.User.ProfilePicture)"
+                                         class="rounded-circle me-2" alt="Admin" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <span>@(admin.User?.FirstName ?? "") @(admin.User?.LastName ?? "")</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.UserGroups?.Any(ug => ug.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) == true)
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Створити пост</h5>
+            <form asp-controller="Posts" asp-action="Create" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="GroupId" value="@Model.Id" />
+                <div class="mb-3">
+                    <textarea name="Content" class="form-control" rows="3" placeholder="Що у вас нового?" required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label for="imageFile" class="form-label">Додати зображення</label>
+                    <input type="file" class="form-control" id="imageFile" name="ImageFile" accept="image/*">
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-send"></i> Опублікувати
+                </button>
+            </form>
+        </div>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Пости групи</h5>
+        @if (Model.Posts?.Any() == true)
+        {
+            foreach (var post in Model.Posts.OrderByDescending(p => p.CreatedAt))
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <img src="@(string.IsNullOrEmpty(post.User?.ProfilePicture) ? "/images/default-avatar.png" : post.User.ProfilePicture)"
+                                 class="rounded-circle me-2" alt="Profile Picture" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <h6 class="mb-0">@(post.User?.FirstName ?? "") @(post.User?.LastName ?? "")</h6>
+                                <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                            </div>
+                        </div>
+                        <p class="card-text">@post.Content</p>
+                        @if (!string.IsNullOrEmpty(post.ImageUrl))
+                        {
+                            <img src="@post.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
+                        }
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <button class="btn btn-link text-decoration-none">
+                                    <i class="bi bi-heart"></i> Подобається (@(post.Likes?.Count ?? 0))
+                                </button>
+                                <button class="btn btn-link text-decoration-none">
+                                    <i class="bi bi-chat"></i> Коментарі (@(post.Comments?.Count ?? 0))
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p class="text-center text-muted my-5">У цій групі ще немає постів</p>
+        }
+    </div>
+</div> 
