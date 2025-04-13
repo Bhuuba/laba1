@@ -299,4 +299,13 @@ public class ProfileController : Controller
 
         return RedirectToAction(nameof(Settings), new { tab = "email" });
     }
-} 
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        TempData["StatusMessage"] = "Ви успішно вийшли з профілю";
+        return RedirectToAction("Index", "Home");
+    }
+}

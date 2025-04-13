@@ -22,88 +22,99 @@
 <body class="bg-light">
     <div id="particles-js" class="particles-container"></div>
     
-    <header class="header-main">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-gradient fixed-top">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
-                    <i class="bi bi-globe2 me-2 text-primary"></i>
-                    <span class="brand-text">NewMyApp</span>
-                </a>
+    @using System.Linq
 
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+    @{
+        var hideHeaderPages = new[] { "/Identity/Account/Register", "/Identity/Account/Login" };
+        var currentPath = Context.Request.Path.ToString();
+        var hideHeader = hideHeaderPages.Contains(currentPath);
+    }
 
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Home" asp-action="Index">
-                                <i class="fas fa-home"></i> Головна
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Posts" asp-action="MyPosts">
-                                <i class="fas fa-file-alt"></i> Мої пости
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Groups" asp-action="MyGroups">
-                                <i class="fas fa-users"></i> Мої групи
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Friends" asp-action="Index">
-                                <i class="fas fa-user-friends"></i> Друзі
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Friends" asp-action="Search">
-                                <i class="fas fa-search"></i> Пошук користувачів
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" asp-controller="Rating" asp-action="Index">
-                                <i class="fas fa-trophy"></i> Рейтинг
-                            </a>
-                        </li>
-                    </ul>
+    @if (!hideHeader)
+    {
+        <header class="header-main">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-gradient fixed-top">
+                <div class="container">
+                    <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-globe2 me-2 text-primary"></i>
+                        <span class="brand-text">NewMyApp</span>
+                    </a>
 
-                    <form class="d-flex" action="@Url.Action("Index", "Search")" method="get">
-                        <input class="form-control me-2" type="search" name="q" placeholder="Пошук...">
-                        <button class="btn btn-outline-light" type="submit">
-                            <i class="fas fa-search"></i>
-                        </button>
-                    </form>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-                    <div class="dropdown ms-3">
-                        <a class="nav-link" asp-controller="Profile" asp-action="Index">
-                            <i class="bi bi-person-circle fs-4"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            <li>
-                                <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
-                                    <i class="fas fa-user me-2"></i>Мій профіль
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Home" asp-action="Index">
+                                    <i class="fas fa-home"></i> Головна
                                 </a>
                             </li>
-                            <li>
-                                <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
-                                    <i class="fas fa-gear me-2"></i>Налаштування
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Posts" asp-action="MyPosts">
+                                    <i class="fas fa-file-alt"></i> Мої пости
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                                    <button type="submit" class="dropdown-item text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i>Вийти
-                                    </button>
-                                </form>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Groups" asp-action="MyGroups">
+                                    <i class="fas fa-users"></i> Мої групи
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Friends" asp-action="Index">
+                                    <i class="fas fa-user-friends"></i> Друзі
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Friends" asp-action="Search">
+                                    <i class="fas fa-search"></i> Пошук користувачів
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" asp-controller="Rating" asp-action="Index">
+                                    <i class="fas fa-trophy"></i> Рейтинг
+                                </a>
                             </li>
                         </ul>
+
+                        <form class="d-flex" action="@Url.Action("Index", "Search")" method="get">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Пошук...">
+                            <button class="btn btn-outline-light" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+
+                        <div class="dropdown ms-3">
+                            <a class="nav-link" asp-controller="Profile" asp-action="Index">
+                                <i class="bi bi-person-circle fs-4"></i>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
+                                        <i class="fas fa-user me-2"></i>Мій профіль
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
+                                        <i class="fas fa-gear me-2"></i>Налаштування
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Вийти
+                                        </button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </nav>
-    </header>
+            </nav>
+        </header>
+    }
 
     <div class="container main-container">
         <main role="main" class="pb-3">
