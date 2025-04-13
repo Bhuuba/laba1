@@ -24,6 +24,10 @@
                    href="#profile" data-bs-toggle="pill" role="tab">
                     <i class="fas fa-user me-2"></i>Профіль
                 </a>
+                <a class="nav-link @(tab == "photo" ? "active" : "")" 
+                   href="#photo" data-bs-toggle="pill" role="tab">
+                    <i class="fas fa-camera me-2"></i>Фото профілю
+                </a>
                 <a class="nav-link @(tab == "password" ? "active" : "")" 
                    href="#password" data-bs-toggle="pill" role="tab">
                     <i class="fas fa-key me-2"></i>Пароль
@@ -58,6 +62,32 @@
                                     <input type="date" class="form-control" name="dateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))">
                                 </div>
                                 <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade @(tab == "photo" ? "show active" : "")" id="photo" role="tabpanel">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Зміна фото профілю</h5>
+                            <div class="text-center mb-3">
+                                @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                                {
+                                    <img src="@Model.ProfilePicture" alt="Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <img src="/images/default-avatar.png" alt="Default Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" />
+                                }
+                            </div>
+                            <form asp-action="UpdatePhoto" method="post" enctype="multipart/form-data">
+                                <div class="mb-3">
+                                    <label class="form-label">Виберіть нове фото</label>
+                                    <input type="file" class="form-control" name="photoFile" accept="image/*" />
+                                    <div class="form-text">Підтримуються формати: JPG, PNG. Максимальний розмір: 5MB</div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Оновити фото</button>
                             </form>
                         </div>
                     </div>

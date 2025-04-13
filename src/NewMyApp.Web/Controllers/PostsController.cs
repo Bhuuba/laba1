@@ -85,6 +85,32 @@ namespace NewMyApp.Web.Controllers
             return View();
         }
 
+        // GET: Posts/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var post = await _context.Posts
+                .Include(p => p.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (post == null)
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || post.UserId != user.Id)
+            {
+                return Forbid();
+            }
+
+            return View(post);
+        }
+
         // POST: Posts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -93,39 +119,49 @@ namespace NewMyApp.Web.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
                 return RedirectToAction("Login", "Account", new { area = "Identity" });
-
-            var post = new Post
-            {
-                Content = model.Content,
-                UserId = userId,
-                GroupId = model.GroupId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            if (model.ImageFile != null)
-            {
-                var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "posts");
-                if (!Directory.Exists(uploadsFolder))
-                    Directory.CreateDirectory(uploadsFolder);
-
-                var uniqueFileName = $"{Guid.NewGuid()}_{model.ImageFile.FileName}";
-                var filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    await model.ImageFile.CopyToAsync(fileStream);
-                }
-
-                post.ImageUrl = $"/uploads/posts/{uniqueFileName}";
             }
 
-            _context.Posts.Add(post);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var post = new Post
+                {
+                    Content = model.Content,
+                    UserId = user.Id,
+                    GroupId = model.GroupId,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            return RedirectToAction(nameof(Index));
+                if (model.ImageFile != null)
+                {
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "posts");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    var uniqueFileName = $"{Guid.NewGuid()}_{model.ImageFile.FileName}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await model.ImageFile.CopyToAsync(fileStream);
+                    }
+
+                    post.ImageUrl = $"/uploads/posts/{uniqueFileName}";
+                }
+
+                _context.Posts.Add(post);
+                await _context.SaveChangesAsync();
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Помилка при створенні поста. Будь ласка, спробуйте ще раз.");
+                return View(model);
+            }
         }
 
         // POST: Posts/Delete/5
@@ -177,8 +213,7 @@ namespace NewMyApp.Web.Controllers
 
             await _context.SaveChangesAsync();
             
-            // Повертаємо JSON з кількістю лайків
-            return Json(new { success = true, likesCount = post.Likes.Count });
+            return RedirectToAction(nameof(Index));
         }
 
         // POST: Posts/CreateComment
@@ -295,59 +330,64 @@ namespace NewMyApp.Web.Controllers
             return RedirectToAction(nameof(Details), new { id = postId });
         }
 
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Content,ImageFile")] Post post)
+        // POST: Posts/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [FromForm] EditPostViewModel model)
         {
-            if (id != post.Id)
+            var post = await _context.Posts.FindAsync(id);
+            if (post == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || post.UserId != user.Id)
             {
-                try
+                return Forbid();
+            }
+
+            try
+            {
+                post.Content = model.Content;
+
+                if (model.ImageFile != null)
                 {
-                    var existingPost = await _context.Posts.FindAsync(id);
-                    if (existingPost == null)
-                    {
-                        return NotFound();
-                    }
+                    var uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "posts");
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
 
-                    var user = await _userManager.GetUserAsync(User);
-                    if (user == null || existingPost.UserId != user.Id)
+                    // Delete old image if exists
+                    if (!string.IsNullOrEmpty(post.ImageUrl))
                     {
-                        return Forbid();
-                    }
-
-                    existingPost.Content = post.Content;
-                    existingPost.UpdatedAt = DateTime.Now;
-
-                    if (post.ImageFile != null)
-                    {
-                        var fileName = Path.GetRandomFileName() + Path.GetExtension(post.ImageFile.FileName);
-                        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", fileName);
-                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        var oldImagePath = Path.Combine(_webHostEnvironment.WebRootPath, post.ImageUrl.TrimStart('/'));
+                        if (System.IO.File.Exists(oldImagePath))
                         {
-                            await post.ImageFile.CopyToAsync(stream);
+                            System.IO.File.Delete(oldImagePath);
                         }
-                        existingPost.ImageUrl = "/uploads/" + fileName;
                     }
 
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PostExists(post.Id))
+                    var uniqueFileName = $"{Guid.NewGuid()}_{model.ImageFile.FileName}";
+                    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    using (var fileStream = new FileStream(filePath, FileMode.Create))
                     {
-                        return NotFound();
+                        await model.ImageFile.CopyToAsync(fileStream);
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    post.ImageUrl = $"/uploads/posts/{uniqueFileName}";
                 }
+
+                _context.Update(post);
+                await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
-            return View(post);
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Помилка при редагуванні поста. Будь ласка, спробуйте ще раз.");
+                return View(post);
+            }
         }
 
         private bool PostExists(int id)

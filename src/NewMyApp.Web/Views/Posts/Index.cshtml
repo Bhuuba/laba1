@@ -9,11 +9,14 @@
         <div class="col-md-8 offset-md-2">
             <h2 class="mb-4">@ViewData["Title"]</h2>
             
-            <div class="mb-4">
-                <a asp-action="Create" class="btn btn-primary">
-                    <i class="fas fa-plus"></i> Створити новий пост
-                </a>
-            </div>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="mb-4">
+                    <a asp-action="Create" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Створити новий пост
+                    </a>
+                </div>
+            }
 
             @foreach (var item in Model)
             {
@@ -65,13 +68,16 @@
                         
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <form asp-action="Like" asp-route-id="@item.Id" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-link text-primary p-0">
-                                        <i class="@(User.Identity?.Name != null && item.Likes.Any(l => l.UserId == User.Identity.Name) ? "fas" : "far") fa-heart"></i>
-                                        <span>@item.Likes.Count</span>
-                                    </button>
-                                </form>
+                                @if (User.Identity?.IsAuthenticated == true)
+                                {
+                                    <form asp-action="Like" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link text-primary p-0" style="border: none; background: none;">
+                                            <i class="@(item.Likes.Any(l => l.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) ? "fas" : "far") fa-heart"></i>
+                                            <span>@item.Likes.Count</span>
+                                        </button>
+                                    </form>
+                                }
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-link text-primary">
                                     <i class="far fa-comment"></i>
                                     <span>@item.Comments.Count</span>
@@ -94,9 +100,18 @@
                     <i class="bi bi-file-earmark-text display-1 text-muted"></i>
                     <h3 class="mt-3">Немає постів</h3>
                     <p class="text-muted">Створіть перший пост, щоб почати спілкування</p>
-                    <a asp-action="Create" class="btn btn-primary">
-                        <i class="bi bi-plus-circle"></i> Створити пост
-                    </a>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a asp-action="Create" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Створити пост
+                        </a>
+                    }
+                    else
+                    {
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right"></i> Увійти для створення поста
+                        </a>
+                    }
                 </div>
             }
         </div>

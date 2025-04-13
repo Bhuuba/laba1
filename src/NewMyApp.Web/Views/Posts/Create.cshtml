@@ -15,7 +15,7 @@
 
                 <div class="form-group mb-3">
                     <label asp-for="Content" class="control-label">Текст поста</label>
-                    <textarea asp-for="Content" class="form-control" rows="5" required></textarea>
+                    <textarea asp-for="Content" class="form-control" rows="5"></textarea>
                     <span asp-validation-for="Content" class="text-danger"></span>
                 </div>
 
@@ -44,15 +44,4 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script>
-        $(document).ready(function() {
-            $('form').on('submit', function() {
-                if (!$('#Content').val().trim()) {
-                    alert('Будь ласка, введіть текст поста');
-                    return false;
-                }
-                return true;
-            });
-        });
-    </script>
 } 

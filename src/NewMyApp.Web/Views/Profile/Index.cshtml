@@ -14,12 +14,6 @@
                              class="rounded-circle img-thumbnail" 
                              alt="Profile Picture" 
                              style="width: 200px; height: 200px; object-fit: cover;">
-                        <button type="button" 
-                                class="btn btn-primary btn-sm position-absolute bottom-0 start-50 translate-middle-x" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#updatePhotoModal">
-                            <i class="bi bi-camera-fill"></i> Змінити фото
-                        </button>
                     </div>
                     <h4 class="mb-0">@Model.FirstName @Model.LastName</h4>
                     @if (!string.IsNullOrEmpty(Model.Bio))
@@ -90,50 +84,8 @@
     </div>
 </div>
 
-<!-- Update Photo Modal -->
-<div class="modal fade" id="updatePhotoModal" tabindex="-1" aria-labelledby="updatePhotoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="updatePhotoModalLabel">Оновити фото профілю</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form asp-action="UpdatePhoto" method="post" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="photoFile" class="form-label">Виберіть нове фото</label>
-                        <input type="file" class="form-control" id="photoFile" name="photoFile" accept="image/*" required>
-                        <div class="form-text">Підтримуються формати: JPG, PNG. Максимальний розмір: 5MB</div>
-                    </div>
-                    <div id="imagePreview" class="text-center mt-3" style="display: none;">
-                        <img src="" alt="Preview" class="img-fluid rounded-circle" style="max-width: 200px; max-height: 200px;">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
-                    <button type="submit" class="btn btn-primary">Зберегти</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 @section Scripts {
     <script>
-        // Image preview
-        document.getElementById('photoFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const preview = document.getElementById('imagePreview');
-                    preview.style.display = 'block';
-                    preview.querySelector('img').src = e.target.result;
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-        
         // Form validation
         (function () {
             'use strict'
