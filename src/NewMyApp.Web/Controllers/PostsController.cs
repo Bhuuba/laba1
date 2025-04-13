@@ -318,19 +318,22 @@ namespace NewMyApp.Web.Controllers
 
             if (comment == null)
             {
-                return NotFound();
+                TempData["Error"] = "Коментар не знайдено.";
+                return RedirectToAction(nameof(Details), new { id = postId });
             }
 
             var userId = _userManager.GetUserId(User);
-            // Перевіряємо чи користувач є автором коментаря або автором поста
+            // Дозволяємо видалення, якщо користувач є автором коментаря або автором поста
             if (userId != comment.UserId && userId != comment.Post.UserId)
             {
-                return Forbid();
+                TempData["Error"] = "У вас немає прав на видалення цього коментаря.";
+                return RedirectToAction(nameof(Details), new { id = postId });
             }
 
             _context.Comments.Remove(comment);
             await _context.SaveChangesAsync();
 
+            TempData["Success"] = "Коментар успішно видалено.";
             return RedirectToAction(nameof(Details), new { id = postId });
         }
 

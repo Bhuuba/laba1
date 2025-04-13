@@ -153,3 +153,20 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Підключення particles.js для анімованого фону
+particlesJS.load(
+  "particles-js",
+  "/wwwroot/js/particles-config.json",
+  function () {
+    console.log("Particles.js loaded - callback");
+  }
+);
+
+// Додаткові анімації для елементів
+window.addEventListener("DOMContentLoaded", () => {
+  const elements = document.querySelectorAll(".animate-on-scroll");
+  elements.forEach((el) => {
+    el.classList.add("animate__animated", "animate__fadeInUp");
+  });
+});

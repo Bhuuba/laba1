@@ -23,15 +23,15 @@
                 <div class="card mb-4">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
-                            <div class="d-flex align-items-center mb-3">
+                            <a asp-controller="Profile" asp-action="Index" asp-route-id="@item.UserId" class="text-decoration-none">
                                 <img src="@(string.IsNullOrEmpty(item.User?.ProfilePicture) ? "/images/default-avatar.png" : item.User.ProfilePicture)" 
                                      class="rounded-circle me-2" 
                                      alt="@(item.User?.FirstName ?? "User")'s profile picture" 
                                      style="width: 40px; height: 40px; object-fit: cover;">
-                                <div>
-                                    <h6 class="mb-0">@(item.User?.FirstName ?? "") @(item.User?.LastName ?? "")</h6>
-                                    <small class="text-muted">@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
-                                </div>
+                            </a>
+                            <div>
+                                <h6 class="mb-0">@(item.User?.FirstName ?? "") @(item.User?.LastName ?? "")</h6>
+                                <small class="text-muted">@item.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
                             </div>
                         </div>
                         @if (User.Identity?.Name == item.User?.Email)
@@ -85,6 +85,38 @@
                                 <a asp-controller="Groups" asp-action="Details" asp-route-id="@item.Group.Id" class="text-muted">
                                     <i class="fas fa-users"></i> @item.Group.Name
                                 </a>
+                            }
+                        </div>
+
+                        <div id="comments-section" class="mt-4">
+                            <h5>Коментарі (@item.Comments.Count)</h5>
+                            @if (item.Comments != null && item.Comments.Any())
+                            {
+                                var displayedComments = item.Comments.Take(3);
+                                foreach (var comment in displayedComments)
+                                {
+                                    <div class="mb-3 p-3 bg-light rounded">
+                                        <div class="d-flex">
+                                            <img src="@(string.IsNullOrEmpty(comment.User?.ProfilePicture) ? "/images/default-avatar.png" : comment.User.ProfilePicture)" 
+                                                 class="rounded-circle me-2" 
+                                                 alt="Profile Picture"
+                                                 style="width: 32px; height: 32px; object-fit: cover;">
+                                            <div>
+                                                <h6 class="mb-0">@comment.User?.FirstName @comment.User?.LastName</h6>
+                                                <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                                <p class="mt-1">@comment.Content</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                @if (item.Comments.Count > 3)
+                                {
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-link">Подивитись більше</a>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-muted">Поки що немає коментарів.</p>
                             }
                         </div>
                     </div>

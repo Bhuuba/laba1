@@ -6,20 +6,20 @@
     if (string.IsNullOrEmpty(tab)) tab = "profile";
 }
 
-<div class="container mt-4">
-    <h2>@ViewData["Title"]</h2>
+<div class="container mt-5">
+    <h2 class="text-primary animate__animated animate__fadeInDown">@ViewData["Title"]</h2>
 
     @if (TempData["StatusMessage"] != null)
     {
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <div class="alert alert-success alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
             @TempData["StatusMessage"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <div class="row">
+    <div class="row mt-4">
         <div class="col-md-3">
-            <div class="nav flex-column nav-pills" role="tablist">
+            <div class="nav flex-column nav-pills shadow-lg p-3 rounded animate__animated animate__fadeInLeft" role="tablist">
                 <a class="nav-link @(tab == "profile" ? "active" : "")" 
                    href="#profile" data-bs-toggle="pill" role="tab">
                     <i class="fas fa-user me-2"></i>Профіль
@@ -39,11 +39,11 @@
             </div>
         </div>
         <div class="col-md-9">
-            <div class="tab-content">
+            <div class="tab-content animate__animated animate__fadeInRight">
                 <div class="tab-pane fade @(tab == "profile" ? "show active" : "")" id="profile" role="tabpanel">
-                    <div class="card">
+                    <div class="card shadow-lg border-0">
                         <div class="card-body">
-                            <h5 class="card-title">Редагування профілю</h5>
+                            <h5 class="card-title text-primary">Редагування профілю</h5>
                             <form asp-action="UpdateProfile" method="post">
                                 <div class="mb-3">
                                     <label class="form-label">Ім'я</label>
@@ -61,24 +61,26 @@
                                     <label class="form-label">Дата народження</label>
                                     <input type="date" class="form-control" name="dateOfBirth" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))">
                                 </div>
-                                <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+                                <button type="submit" class="btn btn-primary shadow">
+                                    <i class="bi bi-save"></i> Зберегти зміни
+                                </button>
                             </form>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-pane fade @(tab == "photo" ? "show active" : "")" id="photo" role="tabpanel">
-                    <div class="card">
+                    <div class="card shadow-lg border-0">
                         <div class="card-body">
-                            <h5 class="card-title">Зміна фото профілю</h5>
+                            <h5 class="card-title text-primary">Зміна фото профілю</h5>
                             <div class="text-center mb-3">
                                 @if (!string.IsNullOrEmpty(Model.ProfilePicture))
                                 {
-                                    <img src="@Model.ProfilePicture" alt="Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" />
+                                    <img src="@Model.ProfilePicture" alt="Profile Picture" class="rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover;" />
                                 }
                                 else
                                 {
-                                    <img src="/images/default-avatar.png" alt="Default Profile Picture" class="rounded-circle" style="width: 150px; height: 150px; object-fit: cover;" />
+                                    <img src="/images/default-avatar.png" alt="Default Profile Picture" class="rounded-circle shadow" style="width: 150px; height: 150px; object-fit: cover;" />
                                 }
                             </div>
                             <form asp-action="UpdatePhoto" method="post" enctype="multipart/form-data">
@@ -87,16 +89,16 @@
                                     <input type="file" class="form-control" name="photoFile" accept="image/*" />
                                     <div class="form-text">Підтримуються формати: JPG, PNG. Максимальний розмір: 5MB</div>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Оновити фото</button>
+                                <button type="submit" class="btn btn-primary shadow">Оновити фото</button>
                             </form>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-pane fade @(tab == "password" ? "show active" : "")" id="password" role="tabpanel">
-                    <div class="card">
+                    <div class="card shadow-lg border-0">
                         <div class="card-body">
-                            <h5 class="card-title">Зміна паролю</h5>
+                            <h5 class="card-title text-primary">Зміна паролю</h5>
                             <form asp-action="ChangePassword" method="post">
                                 <div class="mb-3">
                                     <label class="form-label">Поточний пароль</label>
@@ -110,16 +112,16 @@
                                     <label class="form-label">Підтвердження паролю</label>
                                     <input type="password" class="form-control" name="ConfirmPassword" />
                                 </div>
-                                <button type="submit" class="btn btn-primary">Змінити пароль</button>
+                                <button type="submit" class="btn btn-primary shadow">Змінити пароль</button>
                             </form>
                         </div>
                     </div>
                 </div>
 
                 <div class="tab-pane fade @(tab == "email" ? "show active" : "")" id="email" role="tabpanel">
-                    <div class="card">
+                    <div class="card shadow-lg border-0">
                         <div class="card-body">
-                            <h5 class="card-title">Зміна email</h5>
+                            <h5 class="card-title text-primary">Зміна email</h5>
                             <form asp-action="ChangeEmail" method="post">
                                 <div class="mb-3">
                                     <label class="form-label">Поточний email</label>
@@ -129,7 +131,7 @@
                                     <label class="form-label">Новий email</label>
                                     <input type="email" class="form-control" name="newEmail" />
                                 </div>
-                                <button type="submit" class="btn btn-primary">Змінити email</button>
+                                <button type="submit" class="btn btn-primary shadow">Змінити email</button>
                             </form>
                         </div>
                     </div>
@@ -151,4 +153,4 @@
             });
         });
     </script>
-} 
+}

@@ -9,20 +9,20 @@
     var currentUserId = UserManager.GetUserId(User);
 }
 
-<div class="container py-4">
+<div class="container py-5">
     @if (!SignInManager.IsSignedIn(User))
     {
         <div class="row justify-content-center">
             <div class="col-md-6">
-                <div class="card shadow-lg border-0">
+                <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
                     <div class="card-body p-5">
-                        <h2 class="text-center mb-4">Ласкаво просимо!</h2>
+                        <h2 class="text-center mb-4 text-primary">Ласкаво просимо!</h2>
                         <p class="text-center text-muted mb-4">Увійдіть або зареєструйтесь, щоб отримати доступ до всіх функцій.</p>
                         <div class="d-grid gap-3">
-                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg shadow">
                                 <i class="fas fa-sign-in-alt me-2"></i> Увійти
                             </a>
-                            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-primary btn-lg">
+                            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-primary btn-lg shadow">
                                 <i class="fas fa-user-plus me-2"></i> Зареєструватися
                             </a>
                         </div>
@@ -35,10 +35,10 @@
     {
         <div class="row mb-4 align-items-center">
             <div class="col">
-                <h1 class="display-4 fw-bold text-primary">Останні пости</h1>
+                <h1 class="display-4 fw-bold text-primary animate__animated animate__fadeInLeft">Останні пости</h1>
             </div>
             <div class="col text-end">
-                <a asp-controller="Posts" asp-action="Create" class="btn btn-primary btn-lg shadow-sm">
+                <a asp-controller="Posts" asp-action="Create" class="btn btn-primary btn-lg shadow-sm animate__animated animate__fadeInRight">
                     <i class="fas fa-plus-circle me-2"></i> Створити новий пост
                 </a>
             </div>
@@ -46,7 +46,7 @@
 
         @if (!Model.Any())
         {
-            <div class="text-center py-5">
+            <div class="text-center py-5 animate__animated animate__fadeIn">
                 <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
                 <h3 class="text-muted">Поки що немає жодного поста</h3>
                 <p class="lead">Будьте першим, хто створить пост!</p>
@@ -58,7 +58,7 @@
                 @foreach (var post in Model)
                 {
                     <div class="col-md-12 mb-4">
-                        <div class="card shadow-sm hover-card">
+                        <div class="card shadow-sm hover-card animate__animated animate__fadeInUp">
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
                                     <div class="position-relative">
@@ -71,7 +71,7 @@
                                         }
                                     </div>
                                     <div>
-                                        <h5 class="card-title mb-0 fw-bold">@($"{post.User?.FirstName} {post.User?.LastName}")</h5>
+                                        <h5 class="card-title mb-0 fw-bold text-primary">@($"{post.User?.FirstName} {post.User?.LastName}")</h5>
                                         <small class="text-muted">
                                             <i class="far fa-clock me-1"></i>
                                             @post.CreatedAt.ToString("dd.MM.yyyy HH:mm")

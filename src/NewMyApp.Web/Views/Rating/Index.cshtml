@@ -8,69 +8,65 @@
     var currentUserId = UserManager.GetUserId(User);
 }
 
-<div class="container py-4">
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h2 class="mb-0">Топ 50 користувачів за кількістю лайків</h2>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th scope="col">#</th>
-                                    <th scope="col">Користувач</th>
-                                    <th scope="col">Кількість лайків</th>
-                                    <th scope="col">Дії</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var item in Model)
-                                {
-                                    <tr class="@(item.Rank == 1 ? "table-warning" : "")">
-                                        <td>
-                                            @if (item.Rank == 1)
-                                            {
-                                                <i class="fas fa-crown text-warning"></i>
-                                            }
-                                            @item.Rank
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <img src="@(string.IsNullOrEmpty(item.User.ProfilePicture) ? "/images/default-avatar.png" : item.User.ProfilePicture)" 
-                                                     class="rounded-circle me-2" 
-                                                     style="width: 32px; height: 32px; object-fit: cover;"
-                                                     alt="@item.User.FirstName's profile picture" />
-                                                <div>
-                                                    <div class="fw-bold">@item.User.FirstName @item.User.LastName</div>
-                                                    <small class="text-muted">@item.User.Email</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-primary rounded-pill">
-                                                <i class="fas fa-heart me-1"></i>
-                                                @item.TotalLikes
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if (item.Rank == 1 && item.User.Id == currentUserId)
-                                            {
-                                                <a href="@Url.Action("DownloadTopUserPdf", "Rating")" 
-                                                   class="btn btn-outline-success btn-sm">
-                                                    <i class="fas fa-download me-1"></i>
-                                                    Завантажити сертифікат
-                                                </a>
-                                            }
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+<div class="container py-5">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
+        <div class="card-header bg-primary text-white">
+            <h2 class="mb-0 text-center">Топ 50 користувачів за кількістю лайків</h2>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Користувач</th>
+                            <th scope="col">Кількість лайків</th>
+                            <th scope="col">Дії</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(item.Rank == 1 ? "table-warning animate__animated animate__pulse" : "")">
+                                <td>
+                                    @if (item.Rank == 1)
+                                    {
+                                        <i class="fas fa-crown text-warning"></i>
+                                    }
+                                    @item.Rank
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="@(string.IsNullOrEmpty(item.User.ProfilePicture) ? "/images/default-avatar.png" : item.User.ProfilePicture)" 
+                                             class="rounded-circle me-3" 
+                                             style="width: 48px; height: 48px; object-fit: cover;"
+                                             alt="@item.User.FirstName's profile picture" />
+                                        <div>
+                                            <div class="fw-bold text-primary">@item.User.FirstName @item.User.LastName</div>
+                                            <small class="text-muted">@item.User.Email</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary rounded-pill">
+                                        <i class="fas fa-heart me-1"></i>
+                                        @item.TotalLikes
+                                    </span>
+                                </td>
+                                <td>
+                                    @if (item.Rank == 1 && item.User.Id == currentUserId)
+                                    {
+                                        <a href="@Url.Action("DownloadTopUserPdf", "Rating")" 
+                                           class="btn btn-outline-success btn-sm">
+                                            <i class="fas fa-download me-1"></i>
+                                            Завантажити сертифікат
+                                        </a>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -81,10 +77,14 @@
         .table-warning {
             --bs-table-bg: rgba(255, 193, 7, 0.1);
         }
-        
+
         .fa-crown {
-            font-size: 1.2em;
+            font-size: 1.5em;
             margin-right: 0.5rem;
+        }
+
+        .badge {
+            font-size: 1rem;
         }
     </style>
 }

@@ -1,0 +1,19 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "css in scss",
+      "type": "shell",
+      "command": "sass",
+      "args": [
+        "src/NewMyApp.Web/wwwroot/scss/styles.scss",
+        "src/NewMyApp.Web/wwwroot/css/styles.css"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    }
+  ]
+}

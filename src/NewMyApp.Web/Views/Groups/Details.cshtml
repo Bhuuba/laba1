@@ -1,8 +1,8 @@
 @using NewMyApp.Core.Models
 @model Group
 
-<div class="container mt-4">
-    <div class="card mb-4">
+<div class="container mt-5">
+    <div class="card shadow-lg border-0 animate__animated animate__fadeIn">
         <div class="card-img-top position-relative" style="height: 300px; background-color: #f8f9fa;">
             @if (!string.IsNullOrEmpty(Model.CoverImage))
             {
@@ -21,29 +21,25 @@
         </div>
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <p class="text-muted mb-0">
-                        Створено: @Model.CreatedAt.ToString("dd.MM.yyyy") 
-                        користувачем @Model.Creator.UserName
-                    </p>
-                </div>
-                <div>
-                    @if (!ViewBag.IsMember)
-                    {
-                        <button class="btn btn-primary join-group" data-group-id="@Model.Id">
-                            Приєднатися до групи
+                <p class="text-muted mb-0">
+                    Створено: @Model.CreatedAt.ToString("dd.MM.yyyy") 
+                    користувачем @Model.Creator.UserName
+                </p>
+                @if (!ViewBag.IsMember)
+                {
+                    <button class="btn btn-primary join-group" data-group-id="@Model.Id">
+                        Приєднатися до групи
+                    </button>
+                }
+                else if (!ViewBag.IsAdmin)
+                {
+                    <form asp-action="Leave" method="post" style="display: inline;">
+                        <input type="hidden" name="groupId" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете покинути групу?')">
+                            Покинути групу
                         </button>
-                    }
-                    else if (!ViewBag.IsAdmin)
-                    {
-                        <form asp-action="Leave" method="post" style="display: inline;">
-                            <input type="hidden" name="groupId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете покинути групу?')">
-                                Покинути групу
-                            </button>
-                        </form>
-                    }
-                </div>
+                    </form>
+                }
             </div>
 
             @if (!string.IsNullOrEmpty(Model.Description))
@@ -61,16 +57,12 @@
                     {
                         <div class="col-md-4">
                             <div class="d-flex align-items-center">
-                                @if (!string.IsNullOrEmpty(userGroup.User.ProfilePicture))
-                                {
-                                    <img src="@userGroup.User.ProfilePicture" class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" alt="@userGroup.User.UserName">
-                                }
-                                else
-                                {
-                                    <div class="rounded-circle me-2 bg-secondary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                        <i class="bi bi-person-fill text-white"></i>
-                                    </div>
-                                }
+                                <a asp-controller="Profile" asp-action="Index" asp-route-id="@userGroup.UserId" class="text-decoration-none">
+                                    <img src="@(string.IsNullOrEmpty(userGroup.User.ProfilePicture) ? "/images/default-avatar.png" : userGroup.User.ProfilePicture)" 
+                                         class="rounded-circle me-2" 
+                                         style="width: 40px; height: 40px; object-fit: cover;" 
+                                         alt="@userGroup.User.UserName">
+                                </a>
                                 <div>
                                     <p class="mb-0">@userGroup.User.UserName</p>
                                     <small class="text-muted">@(userGroup.Role == GroupRole.Admin ? "Адміністратор" : "Учасник")</small>
@@ -90,64 +82,58 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <div class="d-flex align-items-center">
-                                        @if (!string.IsNullOrEmpty(post.User.ProfilePicture))
-                                        {
-                                            <img src="@post.User.ProfilePicture" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;" alt="@post.User.UserName">
-                                        }
-                                        else
-                                        {
-                                            <div class="rounded-circle me-2 bg-secondary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                                                <i class="bi bi-person-fill text-white"></i>
-                                            </div>
-                                        }
-                                        <div>
-                                            <p class="mb-0">@post.User.UserName</p>
-                                            <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
-                                        </div>
+                                    <a asp-controller="Profile" asp-action="Index" asp-route-id="@post.UserId" class="text-decoration-none">
+                                        <img src="@(string.IsNullOrEmpty(post.User.ProfilePicture) ? "/images/default-avatar.png" : post.User.ProfilePicture)" 
+                                             class="rounded-circle me-2" 
+                                             style="width: 32px; height: 32px; object-fit: cover;" 
+                                             alt="@post.User.UserName">
+                                    </a>
+                                    <div>
+                                        <p class="mb-0">@post.User.UserName</p>
+                                        <small class="text-muted">@post.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
                                     </div>
-                                    @if (post.UserId == ViewBag.CurrentUserId)
-                                    {
-                                        <div class="dropdown">
-                                            <button class="btn btn-link text-dark" type="button" data-bs-toggle="dropdown">
-                                                <i class="bi bi-three-dots"></i>
-                                            </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <a class="dropdown-item" href="@Url.Action("Edit", "Posts", new { id = post.Id })">
-                                                        <i class="bi bi-pencil me-2"></i>Редагувати
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <form asp-controller="Posts" asp-action="Delete" asp-route-id="@post.Id" method="post" onsubmit="return confirm('Ви впевнені, що хочете видалити цей допис?');">
-                                                        <button type="submit" class="dropdown-item text-danger">
-                                                            <i class="bi bi-trash me-2"></i>Видалити
-                                                        </button>
-                                                    </form>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    }
                                 </div>
-
                                 <p>@post.Content</p>
-
                                 @if (!string.IsNullOrEmpty(post.ImageUrl))
                                 {
                                     <img src="@post.ImageUrl" class="img-fluid rounded mb-3" alt="Post image">
                                 }
-
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <button class="btn btn-link text-dark p-0 me-3 like-button" data-post-id="@post.Id">
-                                            <i class="@(post.Likes.Any(l => l.UserId == ViewBag.CurrentUserId) ? "bi bi-heart-fill text-danger" : "bi bi-heart")"></i>
-                                            <span class="likes-count">@post.Likes.Count</span>
-                                        </button>
-                                        <button class="btn btn-link text-dark p-0 comment-button" data-post-id="@post.Id">
-                                            <i class="bi bi-chat"></i>
-                                            <span>@post.Comments.Count</span>
-                                        </button>
-                                    </div>
+                                    <button class="btn btn-link text-dark p-0 me-3 like-button" data-post-id="@post.Id">
+                                        <i class="@(post.Likes.Any(l => l.UserId == ViewBag.CurrentUserId) ? "bi bi-heart-fill text-danger" : "bi bi-heart")"></i>
+                                        <span class="likes-count">@post.Likes.Count</span>
+                                    </button>
+                                </div>
+                                <div id="comments-section" class="mt-4">
+                                    <h5>Коментарі (@post.Comments.Count)</h5>
+                                    @if (post.Comments != null && post.Comments.Any())
+                                    {
+                                        var displayedComments = post.Comments.Take(3);
+                                        foreach (var comment in displayedComments)
+                                        {
+                                            <div class="mb-3 p-3 bg-light rounded">
+                                                <div class="d-flex">
+                                                    <img src="@(string.IsNullOrEmpty(comment.User?.ProfilePicture) ? "/images/default-avatar.png" : comment.User.ProfilePicture)" 
+                                                         class="rounded-circle me-2" 
+                                                         alt="Profile Picture"
+                                                         style="width: 32px; height: 32px; object-fit: cover;">
+                                                    <div>
+                                                        <h6 class="mb-0">@comment.User?.FirstName @comment.User?.LastName</h6>
+                                                        <small class="text-muted">@comment.CreatedAt.ToString("dd.MM.yyyy HH:mm")</small>
+                                                        <p class="mt-1">@comment.Content</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if (post.Comments.Count > 3)
+                                        {
+                                            <a asp-action="Details" asp-controller="Posts" asp-route-id="@post.Id" class="btn btn-link">Подивитись більше</a>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">Поки що немає коментарів.</p>
+                                    }
                                 </div>
                             </div>
                         </div>
@@ -207,4 +193,4 @@
             });
         });
     </script>
-} 
+}

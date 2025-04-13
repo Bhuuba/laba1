@@ -1,0 +1,87 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Playfair+Display:wght@400;700&display=swap");
+
+body {
+  font-family: "Roboto", sans-serif;
+  background: linear-gradient(135deg, #1e1e2f, #2a2a3b);
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+header {
+  background: linear-gradient(90deg, #4b6cb7, #182848);
+  padding: 1.5rem;
+  text-align: center;
+  color: #fff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-family: "Playfair Display", serif;
+  font-size: 1.8rem;
+}
+
+button {
+  background: linear-gradient(90deg, #ff7e5f, #feb47b);
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.5rem;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #feb47b, #ff7e5f);
+  transform: scale(1.1);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.card {
+  background: #2a2a3b;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 1.5rem;
+  margin: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+footer {
+  background: #182848;
+  color: #fff;
+  text-align: center;
+  padding: 1.5rem;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 0.9rem;
+  }
+
+  header {
+    font-size: 1.5rem;
+  }
+
+  button {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+
+  .card {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+
+  footer {
+    font-size: 0.8rem;
+  }
+}

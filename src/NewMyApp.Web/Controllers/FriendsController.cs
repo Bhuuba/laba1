@@ -82,13 +82,15 @@ namespace NewMyApp.Web.Controllers
             }
 
             // Отримуємо список ID всіх друзів та користувачів з активними запитами
-            var friendsAndRequestsIds = await _context.FriendRequests
-                .Where(fr => 
-                    (fr.SenderId == currentUser.Id || fr.ReceiverId == currentUser.Id) &&
-                    (fr.Status == FriendRequestStatus.Accepted || fr.Status == FriendRequestStatus.Pending))
-                .SelectMany(fr => new[] { fr.SenderId, fr.ReceiverId })
-                .Distinct()
-                .ToListAsync();
+            var friendsAndRequestsIds = await Task.FromResult(
+                _context.FriendRequests
+                    .Where(fr => 
+                        (fr.SenderId == currentUser.Id || fr.ReceiverId == currentUser.Id) &&
+                        (fr.Status == FriendRequestStatus.Accepted || fr.Status == FriendRequestStatus.Pending))
+                    .AsEnumerable() // Переключаемся на клиентскую обработку
+                    .SelectMany(fr => new[] { fr.SenderId, fr.ReceiverId })
+                    .Distinct()
+                    .ToList()); // Убираем асинхронность, так как ToList уже возвращает синхронный результат
 
             // Шукаємо користувачів, які відповідають пошуковому запиту
             var users = await _userManager.Users
@@ -256,4 +258,4 @@ namespace NewMyApp.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
     }
-} 
+}

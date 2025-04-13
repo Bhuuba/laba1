@@ -1,20 +1,20 @@
 @model IEnumerable<NewMyApp.Core.Models.Group>
 
-<div class="container mt-4">
-    <h2>Групи</h2>
-    
+<div class="container mt-5">
+    <h2 class="text-primary mb-4">Групи</h2>
+
     <div class="row">
         @foreach (var group in Model)
         {
             <div class="col-md-4 mb-4">
-                <div class="card h-100">
+                <div class="card shadow-sm border-0 h-100 animate__animated animate__fadeInUp">
                     <div class="card-body">
-                        <h5 class="card-title">@group.Name</h5>
-                        <p class="card-text">@group.Description</p>
+                        <h5 class="card-title text-primary">@group.Name</h5>
+                        <p class="card-text text-muted">@group.Description</p>
                         <p class="card-text">
                             <small class="text-muted">Учасників: @group.Members.Count</small>
                         </p>
-                        
+
                         @if (!group.Members.Any(m => m.UserId == ViewBag.CurrentUserId))
                         {
                             <button class="btn btn-primary join-group" data-group-id="@group.Id">
@@ -43,7 +43,7 @@
             $('.join-group').click(function() {
                 var button = $(this);
                 var groupId = button.data('group-id');
-                
+
                 $.post('/Groups/Join', { groupId: groupId })
                     .done(function(response) {
                         if (response.success) {
@@ -58,4 +58,4 @@
             });
         });
     </script>
-} 
+}
