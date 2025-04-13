@@ -70,13 +70,10 @@
                             <div>
                                 @if (User.Identity?.IsAuthenticated == true)
                                 {
-                                    <form asp-action="Like" asp-route-id="@item.Id" method="post" style="display: inline;">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn btn-link text-primary p-0" style="border: none; background: none;">
-                                            <i class="@(item.Likes.Any(l => l.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) ? "fas" : "far") fa-heart"></i>
-                                            <span>@item.Likes.Count</span>
-                                        </button>
-                                    </form>
+                                    <button class="like-button @(item.Likes.Any(l => l.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) ? "liked" : "")" data-post-id="@item.Id">
+                                        <i class="@(item.Likes.Any(l => l.UserId == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value) ? "fas" : "far") fa-heart"></i>
+                                        <span class="likes-count">@item.Likes.Count</span>
+                                    </button>
                                 }
                                 <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-link text-primary">
                                     <i class="far fa-comment"></i>
@@ -120,4 +117,33 @@
 
 @section Scripts {
     <script src="https://kit.fontawesome.com/your-code.js" crossorigin="anonymous"></script>
-} 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.like-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const postId = this.dataset.postId;
+                    const likesCount = this.querySelector('.likes-count');
+                    const icon = this.querySelector('i');
+
+                    fetch(`/Posts/Like/${postId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            likesCount.textContent = data.likesCount;
+                            icon.classList.toggle('fas', data.isLiked);
+                            icon.classList.toggle('far', !data.isLiked);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            });
+        });
+    </script>
+}

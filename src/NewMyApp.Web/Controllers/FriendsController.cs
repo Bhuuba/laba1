@@ -28,22 +28,20 @@ namespace NewMyApp.Web.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
-                return Challenge();
+                return NotFound();
             }
-            
-            // Get all accepted friendships where the current user is either sender or receiver
-            var friendships = await _context.FriendRequests
+
+            var friends = await _context.FriendRequests
                 .Include(fr => fr.Sender)
                 .Include(fr => fr.Receiver)
-                .Where(fr => (fr.SenderId == currentUser.Id || fr.ReceiverId == currentUser.Id) && fr.IsAccepted)
+                .Where(fr => (fr.SenderId == currentUser.Id || fr.ReceiverId == currentUser.Id) && fr.Status == FriendRequestStatus.Accepted)
                 .ToListAsync();
 
-            // Extract the friend users (excluding the current user)
-            var friends = friendships
+            var friendUsers = friends
                 .Select(fr => fr.SenderId == currentUser.Id ? fr.Receiver : fr.Sender)
                 .ToList();
 
-            return View(friends);
+            return View(friendUsers);
         }
 
         public async Task<IActionResult> Requests()
@@ -56,13 +54,13 @@ namespace NewMyApp.Web.Controllers
             
             var receivedRequests = await _context.FriendRequests
                 .Include(fr => fr.Sender)
-                .Where(fr => fr.ReceiverId == currentUser.Id && !fr.IsAccepted)
-                .ToListAsync() ?? new List<FriendRequest>();
+                .Where(fr => fr.ReceiverId == currentUser.Id && fr.Status == FriendRequestStatus.Pending)
+                .ToListAsync();
 
             var sentRequests = await _context.FriendRequests
                 .Include(fr => fr.Receiver)
-                .Where(fr => fr.SenderId == currentUser.Id && !fr.IsAccepted)
-                .ToListAsync() ?? new List<FriendRequest>();
+                .Where(fr => fr.SenderId == currentUser.Id && fr.Status == FriendRequestStatus.Pending)
+                .ToListAsync();
 
             ViewBag.ReceivedRequests = receivedRequests;
             ViewBag.SentRequests = sentRequests;
@@ -70,80 +68,134 @@ namespace NewMyApp.Web.Controllers
             return View();
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SendRequest(string userId)
+        public async Task<IActionResult> Search(string searchTerm)
         {
+            if (string.IsNullOrWhiteSpace(searchTerm))
+            {
+                return View(new List<User>());
+            }
+
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
                 return Challenge();
             }
-            
+
+            // Отримуємо список ID всіх друзів та користувачів з активними запитами
+            var friendsAndRequestsIds = await _context.FriendRequests
+                .Where(fr => 
+                    (fr.SenderId == currentUser.Id || fr.ReceiverId == currentUser.Id) &&
+                    (fr.Status == FriendRequestStatus.Accepted || fr.Status == FriendRequestStatus.Pending))
+                .SelectMany(fr => new[] { fr.SenderId, fr.ReceiverId })
+                .Distinct()
+                .ToListAsync();
+
+            // Шукаємо користувачів, які відповідають пошуковому запиту
+            var users = await _userManager.Users
+                .Where(u => u.Id != currentUser.Id && 
+                           !friendsAndRequestsIds.Contains(u.Id) &&
+                           (u.UserName.Contains(searchTerm) || 
+                            u.Email.Contains(searchTerm)))
+                .Take(10)
+                .ToListAsync();
+
+            return View(users);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendFriendRequest(string receiverId)
+        {
+            if (string.IsNullOrEmpty(receiverId))
+            {
+                return BadRequest();
+            }
+
+            var sender = await _userManager.GetUserAsync(User);
+            if (sender == null)
+            {
+                return Challenge();
+            }
+
+            var receiver = await _userManager.FindByIdAsync(receiverId);
+            if (receiver == null)
+            {
+                return NotFound();
+            }
+
             // Перевірка чи запит вже існує
             var existingRequest = await _context.FriendRequests
                 .FirstOrDefaultAsync(fr => 
-                    (fr.SenderId == currentUser.Id && fr.ReceiverId == userId) ||
-                    (fr.SenderId == userId && fr.ReceiverId == currentUser.Id));
+                    (fr.SenderId == sender.Id && fr.ReceiverId == receiver.Id) ||
+                    (fr.SenderId == receiver.Id && fr.ReceiverId == sender.Id));
 
             if (existingRequest != null)
             {
-                return Json(new { success = false, message = "Запит вже надіслано" });
+                TempData["Error"] = "Запит в друзі вже надіслано або ви вже є друзями";
+                return RedirectToAction(nameof(Search));
             }
 
             var friendRequest = new FriendRequest
             {
-                SenderId = currentUser.Id,
-                ReceiverId = userId,
-                CreatedAt = DateTime.UtcNow,
-                IsAccepted = false
+                SenderId = sender.Id,
+                ReceiverId = receiver.Id,
+                Status = FriendRequestStatus.Pending,
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.FriendRequests.Add(friendRequest);
             await _context.SaveChangesAsync();
 
-            return Json(new { success = true, message = "Запит надіслано" });
+            TempData["Success"] = "Запит в друзі успішно надіслано";
+            return RedirectToAction(nameof(Search));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptRequest(int requestId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Challenge();
-            }
+            var request = await _context.FriendRequests
+                .FirstOrDefaultAsync(fr => fr.Id == requestId);
 
-            var request = await _context.FriendRequests.FindAsync(requestId);
-            if (request == null || request.ReceiverId != currentUser.Id)
+            if (request == null)
             {
                 return NotFound();
             }
 
-            request.IsAccepted = true;
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || request.ReceiverId != currentUser.Id)
+            {
+                return Unauthorized();
+            }
+
+            request.Status = FriendRequestStatus.Accepted;
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Requests));
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeclineRequest(int requestId)
         {
-            var currentUser = await _userManager.GetUserAsync(User);
-            if (currentUser == null)
-            {
-                return Challenge();
-            }
+            var request = await _context.FriendRequests
+                .FirstOrDefaultAsync(fr => fr.Id == requestId);
 
-            var request = await _context.FriendRequests.FindAsync(requestId);
-            if (request == null || request.ReceiverId != currentUser.Id)
+            if (request == null)
             {
                 return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null || (request.ReceiverId != currentUser.Id && request.SenderId != currentUser.Id))
+            {
+                return Unauthorized();
             }
 
             _context.FriendRequests.Remove(request);
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Requests));
         }
 
         [HttpPost]
@@ -159,13 +211,47 @@ namespace NewMyApp.Web.Controllers
                 .FirstOrDefaultAsync(fr => 
                     ((fr.SenderId == currentUser.Id && fr.ReceiverId == userId) ||
                      (fr.SenderId == userId && fr.ReceiverId == currentUser.Id)) &&
-                    fr.IsAccepted);
+                    fr.Status == FriendRequestStatus.Accepted);
 
             if (friendship != null)
             {
                 _context.FriendRequests.Remove(friendship);
                 await _context.SaveChangesAsync();
             }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Remove(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+            {
+                return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            // Знаходимо всі дружні зв'язки між користувачами
+            var friendships = await _context.FriendRequests
+                .Where(fr => 
+                    (fr.SenderId == currentUser.Id && fr.ReceiverId == userId) ||
+                    (fr.SenderId == userId && fr.ReceiverId == currentUser.Id))
+                .Where(fr => fr.Status == FriendRequestStatus.Accepted)
+                .ToListAsync();
+
+            if (!friendships.Any())
+            {
+                return NotFound();
+            }
+
+            _context.FriendRequests.RemoveRange(friendships);
+            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Index));
         }

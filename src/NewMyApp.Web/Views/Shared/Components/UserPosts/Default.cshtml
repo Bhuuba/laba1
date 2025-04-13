@@ -59,14 +59,39 @@ else
                         
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <form asp-controller="Posts" asp-action="Like" method="post" class="d-inline">
-                                    @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@post.Id" />
-                                    <button type="submit" class="like-button @(post.Likes.Any(l => l.UserId == currentUserId) ? "liked" : "")" data-post-id="@post.Id">
-                                        <i class="@(post.Likes.Any(l => l.UserId == currentUserId) ? "fas" : "far") fa-heart"></i>
-                                        <span class="likes-count">@post.Likes.Count</span>
-                                    </button>
-                                </form>
+                                <button class="like-button @(post.Likes.Any(l => l.UserId == currentUserId) ? "liked" : "")" data-post-id="@post.Id">
+                                    <i class="@(post.Likes.Any(l => l.UserId == currentUserId) ? "fas" : "far") fa-heart"></i>
+                                    <span class="likes-count">@post.Likes.Count</span>
+                                </button>
+                                <script>
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        document.querySelectorAll('.like-button').forEach(button => {
+                                            button.addEventListener('click', function(e) {
+                                                e.preventDefault();
+                                                const postId = this.dataset.postId;
+                                                const likesCount = this.querySelector('.likes-count');
+                                                const icon = this.querySelector('i');
+
+                                                fetch(`/Posts/Like/${postId}`, {
+                                                    method: 'POST',
+                                                    headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                                                    }
+                                                })
+                                                .then(response => response.json())
+                                                .then(data => {
+                                                    if (data.success) {
+                                                        likesCount.textContent = data.likesCount;
+                                                        icon.classList.toggle('fas', data.isLiked);
+                                                        icon.classList.toggle('far', !data.isLiked);
+                                                    }
+                                                })
+                                                .catch(error => console.error('Error:', error));
+                                            });
+                                        });
+                                    });
+                                </script>
                                 <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" class="btn btn-outline-secondary btn-sm">
                                     <i class="fas fa-comment"></i>
                                     <span class="comments-count">@post.Comments.Count</span>
@@ -98,17 +123,16 @@ else
             document.querySelectorAll('.like-button').forEach(button => {
                 button.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const form = this.closest('form');
+                    const postId = this.dataset.postId;
                     const likesCount = this.querySelector('.likes-count');
                     const icon = this.querySelector('i');
 
-                    fetch(form.action, {
+                    fetch(`/Posts/Like/${postId}`, {
                         method: 'POST',
                         headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'RequestVerificationToken': form.querySelector('input[name="__RequestVerificationToken"]').value
-                        },
-                        body: new URLSearchParams(new FormData(form))
+                            'Content-Type': 'application/json',
+                            'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                        }
                     })
                     .then(response => response.json())
                     .then(data => {
@@ -117,12 +141,14 @@ else
                             this.classList.toggle('liked');
                             icon.classList.toggle('fas');
                             icon.classList.toggle('far');
-                            
+
                             // Add animation class
                             icon.classList.add('animate__heartBeat');
                             setTimeout(() => {
                                 icon.classList.remove('animate__heartBeat');
                             }, 1000);
+                        } else {
+                            notyf.error(data.message || 'Помилка при оновленні лайка');
                         }
                     })
                     .catch(error => {
@@ -155,4 +181,4 @@ else
     70% {
         transform: scale(1);
     }
-} 
+}

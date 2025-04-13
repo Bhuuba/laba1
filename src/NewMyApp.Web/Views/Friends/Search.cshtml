@@ -1,0 +1,100 @@
+@model IEnumerable<NewMyApp.Core.Models.User>
+
+@{
+    ViewData["Title"] = "Пошук користувачів";
+}
+
+<div class="container mt-4">
+    <h2>@ViewData["Title"]</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="searchTerm" class="form-control" placeholder="Введіть ім'я або email користувача..." value="@Context.Request.Query["searchTerm"]" required>
+            <div class="input-group-append">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Пошук
+                </button>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.Any() && !string.IsNullOrEmpty(Context.Request.Query["searchTerm"]))
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> Користувачів не знайдено. Спробуйте змінити пошуковий запит.
+        </div>
+    }
+    else if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-search"></i> Введіть ім'я або email користувача для пошуку.
+        </div>
+    }
+
+    <div class="row" id="searchResults">
+        @foreach (var user in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card h-100 shadow-sm" data-aos="fade-up">
+                    <div class="card-body d-flex">
+                        <div class="flex-shrink-0">
+                            @if (!string.IsNullOrEmpty(user.ProfilePicture))
+                            {
+                                <img src="@user.ProfilePicture" class="rounded-circle" alt="Profile Photo" style="width: 100px; height: 100px; object-fit: cover;">
+                            }
+                            else
+                            {
+                                <img src="/images/default-profile.png" class="rounded-circle" alt="Default Profile" style="width: 100px; height: 100px; object-fit: cover;">
+                            }
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <h5 class="card-title">@user.UserName</h5>
+                            <p class="card-text text-muted">
+                                <i class="fas fa-envelope"></i> @user.Email
+                            </p>
+                            <form asp-action="SendFriendRequest" method="post" class="d-inline">
+                                <input type="hidden" name="receiverId" value="@user.Id" />
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-user-plus"></i> Додати в друзі
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Initialize AOS
+            AOS.init({
+                duration: 800,
+                once: true
+            });
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(function() {
+                $('.alert').fadeOut('slow');
+            }, 5000);
+        });
+    </script>
+} 

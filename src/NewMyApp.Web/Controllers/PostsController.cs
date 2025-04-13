@@ -196,7 +196,7 @@ namespace NewMyApp.Web.Controllers
 
             if (post == null)
             {
-                return NotFound();
+                return Json(new { success = false, message = "Пост не найден" });
             }
 
             var userId = _userManager.GetUserId(User);
@@ -208,12 +208,16 @@ namespace NewMyApp.Web.Controllers
             }
             else
             {
-                post.Likes.Add(new Like { UserId = userId, PostId = post.Id });
+                post.Likes.Add(new Like { PostId = post.Id, UserId = userId });
             }
 
             await _context.SaveChangesAsync();
-            
-            return RedirectToAction(nameof(Index));
+
+            return Json(new {
+                success = true,
+                isLiked = existingLike == null,
+                likesCount = post.Likes.Count
+            });
         }
 
         // POST: Posts/CreateComment
@@ -395,4 +399,4 @@ namespace NewMyApp.Web.Controllers
             return _context.Posts.Any(e => e.Id == id);
         }
     }
-} 
+}
