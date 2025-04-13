@@ -1,3 +1,4 @@
+@using System.Linq
 @model IEnumerable<NewMyApp.Core.Models.Friendship>
 
 @{
@@ -14,39 +15,81 @@
                 </a>
             </div>
 
-            @if (!Model.Any())
+            @{
+                var receivedRequests = (List<NewMyApp.Core.Models.FriendRequest>)ViewBag.ReceivedRequests;
+                var sentRequests = (List<NewMyApp.Core.Models.FriendRequest>)ViewBag.SentRequests;
+            }
+
+            @if ((receivedRequests == null || !receivedRequests.Any()) && 
+                 (sentRequests == null || !sentRequests.Any()))
             {
                 <div class="alert alert-info">
-                    У вас немає нових запитів у друзі.
+                    У вас немає активних запитів у друзі.
                 </div>
             }
             else
             {
-                <div class="row">
-                    @foreach (var request in Model)
-                    {
-                        <div class="col-md-6 mb-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center">
-                                        <img src="@(string.IsNullOrEmpty(request.Sender.ProfilePicture) ? "/images/default-avatar.png" : request.Sender.ProfilePicture)" 
-                                             class="rounded-circle me-3" 
-                                             alt="@request.Sender.FirstName's profile picture" 
-                                             style="width: 64px; height: 64px; object-fit: cover;">
-                                        <div>
-                                            <h5 class="card-title mb-1">@request.Sender.FirstName @request.Sender.LastName</h5>
-                                            <p class="text-muted mb-2">@request.Sender.Email</p>
-                                            <div class="btn-group">
-                                                <form asp-action="Accept" asp-route-userId="@request.SenderId" method="post" class="d-inline me-2">
+                if (receivedRequests != null && receivedRequests.Any())
+                {
+                    <h4 class="mb-3">Отримані запити</h4>
+                    <div class="row mb-4">
+                        @foreach (var request in receivedRequests)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(string.IsNullOrEmpty(request.Sender.ProfilePicture) ? "/images/default-avatar.png" : request.Sender.ProfilePicture)" 
+                                                 class="rounded-circle me-3" 
+                                                 alt="@request.Sender.FirstName's profile picture" 
+                                                 style="width: 64px; height: 64px; object-fit: cover;">
+                                            <div>
+                                                <h5 class="card-title mb-1">@request.Sender.FirstName @request.Sender.LastName</h5>
+                                                <p class="text-muted mb-2">@request.Sender.Email</p>
+                                                <div class="btn-group">
+                                                    <form asp-action="AcceptRequest" asp-route-requestId="@request.Id" method="post" class="d-inline me-2">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="fas fa-check"></i> Прийняти
+                                                        </button>
+                                                    </form>
+                                                    <form asp-action="DeclineRequest" asp-route-requestId="@request.Id" method="post" class="d-inline">
+                                                        @Html.AntiForgeryToken()
+                                                        <button type="submit" class="btn btn-danger btn-sm">
+                                                            <i class="fas fa-times"></i> Відхилити
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                if (sentRequests != null && sentRequests.Any())
+                {
+                    <h4 class="mb-3">Надіслані запити</h4>
+                    <div class="row">
+                        @foreach (var request in sentRequests)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-center">
+                                            <img src="@(string.IsNullOrEmpty(request.Receiver.ProfilePicture) ? "/images/default-avatar.png" : request.Receiver.ProfilePicture)" 
+                                                 class="rounded-circle me-3" 
+                                                 alt="@request.Receiver.FirstName's profile picture" 
+                                                 style="width: 64px; height: 64px; object-fit: cover;">
+                                            <div>
+                                                <h5 class="card-title mb-1">@request.Receiver.FirstName @request.Receiver.LastName</h5>
+                                                <p class="text-muted mb-2">@request.Receiver.Email</p>
+                                                <form asp-action="DeclineRequest" asp-route-requestId="@request.Id" method="post">
                                                     @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-success btn-sm">
-                                                        <i class="fas fa-check"></i> Прийняти
-                                                    </button>
-                                                </form>
-                                                <form asp-action="Reject" asp-route-userId="@request.SenderId" method="post" class="d-inline">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-danger btn-sm">
-                                                        <i class="fas fa-times"></i> Відхилити
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="fas fa-times"></i> Скасувати запит
                                                     </button>
                                                 </form>
                                             </div>
@@ -54,9 +97,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+                }
             }
         </div>
     </div>

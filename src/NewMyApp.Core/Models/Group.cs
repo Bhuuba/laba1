@@ -28,6 +28,7 @@ namespace NewMyApp.Core.Models
         public virtual User Creator { get; set; } = null!;
         public virtual ICollection<Post> Posts { get; set; } = new HashSet<Post>();
         public virtual ICollection<UserGroup> UserGroups { get; set; } = new HashSet<UserGroup>();
+        public virtual ICollection<GroupMember> Members { get; set; } = new HashSet<GroupMember>();
         
         public Group()
         {

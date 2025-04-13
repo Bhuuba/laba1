@@ -14,6 +14,8 @@ public interface IApplicationDbContext
     DbSet<PostTag> PostTags { get; set; }
     DbSet<UserGroup> UserGroups { get; set; }
     DbSet<PostView> PostViews { get; set; }
+    DbSet<GroupMember> GroupMembers { get; set; }
+    DbSet<FriendRequest> FriendRequests { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 } 

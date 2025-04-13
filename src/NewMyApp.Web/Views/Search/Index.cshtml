@@ -30,14 +30,23 @@
                                 @foreach (var user in Model.Users)
                                 {
                                     <div class="list-group-item">
-                                        <div class="d-flex align-items-center">
-                                            <img src="@(string.IsNullOrEmpty(user.ProfilePicture) ? "/images/default-avatar.png" : user.ProfilePicture)" 
-                                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" 
-                                                 alt="@user.FirstName">
-                                            <div>
-                                                <h6 class="mb-0">@user.FirstName @user.LastName</h6>
-                                                <small class="text-muted">@user.Email</small>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div class="d-flex align-items-center">
+                                                <img src="@(string.IsNullOrEmpty(user.ProfilePicture) ? "/images/default-avatar.png" : user.ProfilePicture)" 
+                                                     class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;" 
+                                                     alt="@user.FirstName">
+                                                <div>
+                                                    <h6 class="mb-0">@user.FirstName @user.LastName</h6>
+                                                    <small class="text-muted">@user.Email</small>
+                                                </div>
                                             </div>
+                                            @if (user.Id != User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                            {
+                                                <button class="btn btn-outline-primary btn-sm send-friend-request" 
+                                                        data-user-id="@user.Id">
+                                                    <i class="fas fa-user-plus"></i>
+                                                </button>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -127,4 +136,35 @@
             <p class="text-muted">Ви можете шукати користувачів, пости та групи</p>
         </div>
     }
-</div> 
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.send-friend-request').click(function() {
+                var button = $(this);
+                var userId = button.data('user-id');
+                
+                $.ajax({
+                    url: '@Url.Action("SendRequest", "Friends")',
+                    type: 'POST',
+                    data: { userId: userId },
+                    success: function(response) {
+                        if (response.success) {
+                            button.prop('disabled', true)
+                                  .removeClass('btn-outline-primary')
+                                  .addClass('btn-secondary')
+                                  .html('<i class="fas fa-check"></i>');
+                            toastr.success(response.message);
+                        } else {
+                            toastr.warning(response.message);
+                        }
+                    },
+                    error: function() {
+                        toastr.error('Помилка при надсиланні запиту');
+                    }
+                });
+            });
+        });
+    </script>
+} 

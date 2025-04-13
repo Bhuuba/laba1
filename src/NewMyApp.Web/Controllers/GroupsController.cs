@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using NewMyApp.Core.Models;
 using NewMyApp.Infrastructure.Data;
 using NewMyApp.Web.Models;
+using System.Threading.Tasks;
 
 namespace NewMyApp.Web.Controllers;
 
@@ -29,27 +30,25 @@ public class GroupsController : Controller
     {
         var groups = await _context.Groups
             .Include(g => g.UserGroups)
-            .OrderByDescending(g => g.CreatedAt)
+            .Include(g => g.Creator)
             .ToListAsync();
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        ViewBag.CurrentUserId = currentUser?.Id;
 
         return View(groups);
     }
 
     public async Task<IActionResult> MyGroups()
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null)
-        {
-            return NotFound();
-        }
-
+        var currentUser = await _userManager.GetUserAsync(User);
         var groups = await _context.Groups
             .Include(g => g.UserGroups)
-            .Where(g => g.UserGroups.Any(ug => ug.UserId == user.Id))
-            .OrderByDescending(g => g.CreatedAt)
+            .Include(g => g.Creator)
+            .Where(g => g.UserGroups.Any(ug => ug.UserId == currentUser.Id))
             .ToListAsync();
 
-        return View("Index", groups);
+        return View(groups);
     }
 
     public IActionResult Create()
@@ -115,10 +114,15 @@ public class GroupsController : Controller
     public async Task<IActionResult> Details(int id)
     {
         var group = await _context.Groups
+            .Include(g => g.Creator)
             .Include(g => g.UserGroups)
-            .ThenInclude(ug => ug.User)
+                .ThenInclude(ug => ug.User)
             .Include(g => g.Posts)
-            .ThenInclude(p => p.User)
+                .ThenInclude(p => p.User)
+            .Include(g => g.Posts)
+                .ThenInclude(p => p.Likes)
+            .Include(g => g.Posts)
+                .ThenInclude(p => p.Comments)
             .FirstOrDefaultAsync(g => g.Id == id);
 
         if (group == null)
@@ -126,37 +130,41 @@ public class GroupsController : Controller
             return NotFound();
         }
 
+        var currentUser = await _userManager.GetUserAsync(User);
+        ViewBag.CurrentUserId = currentUser?.Id;
+        ViewBag.IsAdmin = group.UserGroups.Any(ug => ug.UserId == currentUser?.Id && ug.Role == GroupRole.Admin);
+        ViewBag.IsMember = group.UserGroups.Any(ug => ug.UserId == currentUser?.Id);
+
         return View(group);
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Join(int id)
+    public async Task<IActionResult> Join(int groupId)
     {
-        var group = await _context.Groups.FindAsync(id);
+        var group = await _context.Groups
+            .Include(g => g.UserGroups)
+            .FirstOrDefaultAsync(g => g.Id == groupId);
+
         if (group == null)
         {
-            return NotFound();
+            return NotFound("Група не знайдена");
         }
 
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            return NotFound();
+            return Unauthorized("Будь ласка, увійдіть в систему");
         }
 
-        var existingMembership = await _context.UserGroups
-            .FirstOrDefaultAsync(ug => ug.GroupId == id && ug.UserId == user.Id);
-
-        if (existingMembership != null)
+        if (group.UserGroups.Any(ug => ug.UserId == user.Id))
         {
-            return RedirectToAction(nameof(Details), new { id });
+            return BadRequest("Ви вже є учасником цієї групи");
         }
 
         var userGroup = new UserGroup
         {
             UserId = user.Id,
-            GroupId = id,
+            GroupId = groupId,
             Role = GroupRole.Member,
             JoinedAt = DateTime.UtcNow
         };
@@ -164,40 +172,39 @@ public class GroupsController : Controller
         _context.UserGroups.Add(userGroup);
         await _context.SaveChangesAsync();
 
-        return RedirectToAction(nameof(Details), new { id });
+        return Ok();
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Leave(int id)
+    public async Task<IActionResult> Leave(int groupId)
     {
+        var group = await _context.Groups
+            .Include(g => g.UserGroups)
+            .FirstOrDefaultAsync(g => g.Id == groupId);
+
+        if (group == null)
+        {
+            return NotFound("Група не знайдена");
+        }
+
         var user = await _userManager.GetUserAsync(User);
         if (user == null)
         {
-            return NotFound();
+            return Unauthorized("Будь ласка, увійдіть в систему");
         }
 
-        var membership = await _context.UserGroups
-            .FirstOrDefaultAsync(ug => ug.GroupId == id && ug.UserId == user.Id);
-
-        if (membership == null)
+        var userGroup = group.UserGroups.FirstOrDefault(ug => ug.UserId == user.Id);
+        if (userGroup == null)
         {
-            return NotFound();
+            return BadRequest("Ви не є учасником цієї групи");
         }
 
-        if (membership.Role == GroupRole.Admin)
+        if (userGroup.Role == GroupRole.Admin && group.UserGroups.Count(ug => ug.Role == GroupRole.Admin) == 1)
         {
-            var otherAdmins = await _context.UserGroups
-                .CountAsync(ug => ug.GroupId == id && ug.Role == GroupRole.Admin && ug.UserId != user.Id);
-
-            if (otherAdmins == 0)
-            {
-                ModelState.AddModelError(string.Empty, "Ви не можете покинути групу, оскільки ви єдиний адміністратор");
-                return RedirectToAction(nameof(Details), new { id });
-            }
+            return BadRequest("Ви не можете покинути групу, оскільки ви єдиний адміністратор");
         }
 
-        _context.UserGroups.Remove(membership);
+        _context.UserGroups.Remove(userGroup);
         await _context.SaveChangesAsync();
 
         return RedirectToAction(nameof(Index));

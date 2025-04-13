@@ -1,9 +1,10 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using NewMyApp.Core.Models;
+using NewMyApp.Web.Models;
 using NewMyApp.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using NewMyApp.Web.Models;
+using Microsoft.AspNetCore.Identity;
+using NewMyApp.Core.Models;
 
 namespace NewMyApp.Web.Controllers;
 
@@ -11,21 +12,27 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly ApplicationDbContext _context;
+    private readonly SignInManager<User> _signInManager;
 
-    public HomeController(ILogger<HomeController> logger, ApplicationDbContext context)
+    public HomeController(ILogger<HomeController> logger, ApplicationDbContext context, SignInManager<User> signInManager)
     {
         _logger = logger;
         _context = context;
+        _signInManager = signInManager;
     }
 
     public async Task<IActionResult> Index()
     {
+        if (!_signInManager.IsSignedIn(User))
+        {
+            return View(new List<Post>());
+        }
+
         var posts = await _context.Posts
             .Include(p => p.User)
             .Include(p => p.Likes)
             .Include(p => p.Comments)
             .OrderByDescending(p => p.CreatedAt)
-            .Take(20)
             .ToListAsync();
 
         return View(posts);

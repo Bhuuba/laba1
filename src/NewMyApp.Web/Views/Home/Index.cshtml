@@ -10,65 +10,86 @@
 }
 
 <div class="container py-4">
-    <div class="row mb-4 align-items-center">
-        <div class="col">
-            <h1 class="display-4 fw-bold text-primary">Останні пости</h1>
-        </div>
-        <div class="col text-end">
-            <a asp-controller="Posts" asp-action="Create" class="btn btn-primary btn-lg shadow-sm">
-                <i class="fas fa-plus-circle me-2"></i> Створити новий пост
-            </a>
-        </div>
-    </div>
-
-    @if (!Model.Any())
+    @if (!SignInManager.IsSignedIn(User))
     {
-        <div class="text-center py-5">
-            <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
-            <h3 class="text-muted">Поки що немає жодного поста</h3>
-            <p class="lead">Будьте першим, хто створить пост!</p>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body p-5">
+                        <h2 class="text-center mb-4">Ласкаво просимо!</h2>
+                        <p class="text-center text-muted mb-4">Увійдіть або зареєструйтесь, щоб отримати доступ до всіх функцій.</p>
+                        <div class="d-grid gap-3">
+                            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary btn-lg">
+                                <i class="fas fa-sign-in-alt me-2"></i> Увійти
+                            </a>
+                            <a asp-area="Identity" asp-page="/Account/Register" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-user-plus me-2"></i> Зареєструватися
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     }
     else
     {
-        <div class="row">
-            @foreach (var post in Model)
-            {
-                <div class="col-md-12 mb-4">
-                    <div class="card shadow-sm hover-card">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="position-relative">
-                                    <img src="@(post.User?.ProfilePicture ?? "/images/default-avatar.png")" 
-                                         class="rounded-circle me-3 profile-image" 
-                                         alt="Profile picture" />
-                                    @if (post.User?.LastActive >= DateTime.UtcNow.AddMinutes(-5))
-                                    {
-                                        <span class="position-absolute bottom-0 end-0 bg-success rounded-circle online-indicator"></span>
-                                    }
-                                </div>
-                                <div>
-                                    <h5 class="card-title mb-0 fw-bold">@($"{post.User?.FirstName} {post.User?.LastName}")</h5>
-                                    <small class="text-muted">
-                                        <i class="far fa-clock me-1"></i>
-                                        @post.CreatedAt.ToString("dd.MM.yyyy HH:mm")
-                                    </small>
-                                </div>
-                            </div>
+        <div class="row mb-4 align-items-center">
+            <div class="col">
+                <h1 class="display-4 fw-bold text-primary">Останні пости</h1>
+            </div>
+            <div class="col text-end">
+                <a asp-controller="Posts" asp-action="Create" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="fas fa-plus-circle me-2"></i> Створити новий пост
+                </a>
+            </div>
+        </div>
 
-                            <p class="card-text lead mb-4">@post.Content</p>
-
-                            @if (!string.IsNullOrEmpty(post.ImageUrl))
-                            {
-                                <div class="position-relative mb-3 image-container">
-                                    <img src="@post.ImageUrl" class="img-fluid rounded" alt="Post image" />
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+                <h3 class="text-muted">Поки що немає жодного поста</h3>
+                <p class="lead">Будьте першим, хто створить пост!</p>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var post in Model)
+                {
+                    <div class="col-md-12 mb-4">
+                        <div class="card shadow-sm hover-card">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <div class="position-relative">
+                                        <img src="@(post.User?.ProfilePicture ?? "/images/default-avatar.png")" 
+                                             class="rounded-circle me-3 profile-image" 
+                                             alt="Profile picture" />
+                                        @if (post.User?.LastActive >= DateTime.UtcNow.AddMinutes(-5))
+                                        {
+                                            <span class="position-absolute bottom-0 end-0 bg-success rounded-circle online-indicator"></span>
+                                        }
+                                    </div>
+                                    <div>
+                                        <h5 class="card-title mb-0 fw-bold">@($"{post.User?.FirstName} {post.User?.LastName}")</h5>
+                                        <small class="text-muted">
+                                            <i class="far fa-clock me-1"></i>
+                                            @post.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                                        </small>
+                                    </div>
                                 </div>
-                            }
 
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex gap-2">
-                                    @if (SignInManager.IsSignedIn(User))
-                                    {
+                                <p class="card-text lead mb-4">@post.Content</p>
+
+                                @if (!string.IsNullOrEmpty(post.ImageUrl))
+                                {
+                                    <div class="position-relative mb-3 image-container">
+                                        <img src="@post.ImageUrl" class="img-fluid rounded" alt="Post image" />
+                                    </div>
+                                }
+
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex gap-2">
                                         <form asp-controller="Posts" asp-action="Like" method="post" class="d-inline">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="id" value="@post.Id" />
@@ -79,46 +100,46 @@
                                                 <span class="likes-count">@post.Likes.Count</span>
                                             </button>
                                         </form>
-                                    }
-                                    <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" 
-                                       class="btn btn-outline-secondary btn-sm">
-                                        <i class="fas fa-comment"></i> 
-                                        <span class="comments-count">@post.Comments.Count</span>
-                                    </a>
-                                </div>
-                                @if (post.UserId == currentUserId)
-                                {
-                                    <div class="dropdown">
-                                        <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
-                                            <i class="fas fa-ellipsis-h"></i>
-                                        </button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li>
-                                                <a class="dropdown-item" href="@Url.Action("Edit", "Posts", new { id = post.Id })">
-                                                    <i class="fas fa-edit me-2"></i> Редагувати
-                                                </a>
-                                            </li>
-                                            <li>
-                                                <hr class="dropdown-divider">
-                                            </li>
-                                            <li>
-                                                <form asp-controller="Posts" asp-action="Delete" method="post" 
-                                                      onsubmit="return confirm('Ви впевнені, що хочете видалити цей пост?');">
-                                                    <input type="hidden" name="id" value="@post.Id" />
-                                                    <button type="submit" class="dropdown-item text-danger">
-                                                        <i class="fas fa-trash-alt me-2"></i> Видалити
-                                                    </button>
-                                                </form>
-                                            </li>
-                                        </ul>
+                                        <a asp-controller="Posts" asp-action="Details" asp-route-id="@post.Id" 
+                                           class="btn btn-outline-secondary btn-sm">
+                                            <i class="fas fa-comment"></i> 
+                                            <span class="comments-count">@post.Comments.Count</span>
+                                        </a>
                                     </div>
-                                }
+                                    @if (post.UserId == currentUserId)
+                                    {
+                                        <div class="dropdown">
+                                            <button class="btn btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" href="@Url.Action("Edit", "Posts", new { id = post.Id })">
+                                                        <i class="fas fa-edit me-2"></i> Редагувати
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <hr class="dropdown-divider">
+                                                </li>
+                                                <li>
+                                                    <form asp-controller="Posts" asp-action="Delete" method="post" 
+                                                          onsubmit="return confirm('Ви впевнені, що хочете видалити цей пост?');">
+                                                        <input type="hidden" name="id" value="@post.Id" />
+                                                        <button type="submit" class="dropdown-item text-danger">
+                                                            <i class="fas fa-trash-alt me-2"></i> Видалити
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
+                }
+            </div>
+        }
     }
 </div>
 

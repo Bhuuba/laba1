@@ -21,6 +21,8 @@ namespace NewMyApp.Infrastructure.Data
         public DbSet<PostTag> PostTags { get; set; } = null!;
         public DbSet<UserGroup> UserGroups { get; set; } = null!;
         public DbSet<PostView> PostViews { get; set; } = null!;
+        public DbSet<GroupMember> GroupMembers { get; set; } = null!;
+        public DbSet<FriendRequest> FriendRequests { get; set; } = null!;
         
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -104,6 +106,32 @@ namespace NewMyApp.Infrastructure.Data
                 .HasOne(ug => ug.Group)
                 .WithMany(g => g.UserGroups)
                 .HasForeignKey(ug => ug.GroupId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            // Configure GroupMember
+            builder.Entity<GroupMember>()
+                .HasOne(gm => gm.User)
+                .WithMany()
+                .HasForeignKey(gm => gm.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            builder.Entity<GroupMember>()
+                .HasOne(gm => gm.Group)
+                .WithMany(g => g.Members)
+                .HasForeignKey(gm => gm.GroupId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            // Configure FriendRequest
+            builder.Entity<FriendRequest>()
+                .HasOne(fr => fr.Sender)
+                .WithMany()
+                .HasForeignKey(fr => fr.SenderId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            builder.Entity<FriendRequest>()
+                .HasOne(fr => fr.Receiver)
+                .WithMany()
+                .HasForeignKey(fr => fr.ReceiverId)
                 .OnDelete(DeleteBehavior.NoAction);
                 
             // Configure PostTag composite key
