@@ -106,7 +106,7 @@ namespace NewMyApp.Infrastructure.Data
                 .HasOne(ug => ug.Group)
                 .WithMany(g => g.UserGroups)
                 .HasForeignKey(ug => ug.GroupId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
                 
             // Configure GroupMember
             builder.Entity<GroupMember>()
@@ -164,4 +164,4 @@ namespace NewMyApp.Infrastructure.Data
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }
-} 
+}

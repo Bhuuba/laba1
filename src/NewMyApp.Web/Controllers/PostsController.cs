@@ -125,6 +125,20 @@ namespace NewMyApp.Web.Controllers
                 return RedirectToAction("Login", "Account", new { area = "Identity" });
             }
 
+            var isMember = await _context.UserGroups.AnyAsync(ug => ug.UserId == user.Id && ug.GroupId == model.GroupId);
+            if (!isMember)
+            {
+                ModelState.AddModelError("", "Ви не є учасником цієї групи і не можете створювати в ній пости.");
+                ViewBag.Groups = await _context.Groups
+                    .Select(g => new SelectListItem
+                    {
+                        Value = g.Id.ToString(),
+                        Text = g.Name
+                    })
+                    .ToListAsync();
+                return View(model);
+            }
+
             try
             {
                 var post = new Post
@@ -200,6 +214,11 @@ namespace NewMyApp.Web.Controllers
             }
 
             var userId = _userManager.GetUserId(User);
+            if (userId == null)
+            {
+                return Json(new { success = false, message = "Пользователь не авторизован" });
+            }
+
             var existingLike = post.Likes.FirstOrDefault(l => l.UserId == userId);
 
             if (existingLike != null)

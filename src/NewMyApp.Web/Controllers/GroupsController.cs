@@ -207,6 +207,31 @@ public class GroupsController : Controller
         _context.UserGroups.Remove(userGroup);
         await _context.SaveChangesAsync();
 
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(MyGroups));
     }
-} 
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var group = await _context.Groups
+            .Include(g => g.UserGroups)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (group == null)
+        {
+            return NotFound("Група не знайдена");
+        }
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null || !group.UserGroups.Any(ug => ug.UserId == currentUser.Id && ug.Role == GroupRole.Admin))
+        {
+            return Forbid("Тільки адміністратор може видалити групу");
+        }
+
+        _context.Groups.Remove(group);
+        await _context.SaveChangesAsync();
+
+        return RedirectToAction(nameof(MyGroups));
+    }
+}

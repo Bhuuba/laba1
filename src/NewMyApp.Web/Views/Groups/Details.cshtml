@@ -33,10 +33,16 @@
                 }
                 else if (!ViewBag.IsAdmin)
                 {
-                    <form asp-action="Leave" method="post" style="display: inline;">
-                        <input type="hidden" name="groupId" value="@Model.Id" />
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете покинути групу?')">
-                            Покинути групу
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#leaveGroupModal">
+                        Покинути групу
+                    </button>
+                }
+                @if (ViewBag.IsAdmin)
+                {
+                    <form asp-action="Delete" method="post" style="display: inline;">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button type="submit" class="btn btn-danger" onclick="return confirm('Ви впевнені, що хочете видалити цю групу?')">
+                            <i class="bi bi-trash"></i> Видалити групу
                         </button>
                     </form>
                 }
@@ -103,6 +109,10 @@
                                         <i class="@(post.Likes.Any(l => l.UserId == ViewBag.CurrentUserId) ? "bi bi-heart-fill text-danger" : "bi bi-heart")"></i>
                                         <span class="likes-count">@post.Likes.Count</span>
                                     </button>
+                                    <a asp-action="Details" asp-controller="Posts" asp-route-id="@post.Id" class="btn btn-link text-primary">
+                                        <i class="far fa-comment"></i>
+                                        <span>@post.Comments.Count</span>
+                                    </a>
                                 </div>
                                 <div id="comments-section" class="mt-4">
                                     <h5>Коментарі (@post.Comments.Count)</h5>
@@ -154,6 +164,36 @@
     </div>
 </div>
 
+<div class="modal fade" id="leaveGroupModal" tabindex="-1" aria-labelledby="leaveGroupModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="leaveGroupModalLabel">Підтвердження виходу</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Ви впевнені, що хочете покинути цю групу?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <form asp-action="Leave" method="post" style="display: inline;">
+                    <input type="hidden" name="groupId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger">Покинути</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal {
+        z-index: 1050 !important;
+    }
+    .modal-backdrop {
+        display: none !important;
+    }
+</style>
+
 @section Scripts {
     <script>
         $(document).ready(function() {
@@ -170,26 +210,33 @@
                     });
             });
 
-            $('.like-button').click(function() {
+            $('.like-button').click(function(e) {
+                e.preventDefault();
                 var postId = $(this).data('post-id');
                 var button = $(this);
-                
-                $.post('/Posts/Like', { postId: postId })
-                    .done(function(response) {
+
+                $.ajax({
+                    url: '/Posts/Like/' + postId,
+                    type: 'POST',
+                    headers: {
+                        'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                    },
+                    success: function(response) {
                         var icon = button.find('i');
                         var count = button.find('.likes-count');
-                        
+
                         if (response.isLiked) {
                             icon.removeClass('bi-heart').addClass('bi-heart-fill text-danger');
                         } else {
                             icon.removeClass('bi-heart-fill text-danger').addClass('bi-heart');
                         }
-                        
+
                         count.text(response.likesCount);
-                    })
-                    .fail(function(xhr) {
+                    },
+                    error: function(xhr) {
                         alert('Помилка при оцінці допису: ' + xhr.responseText);
-                    });
+                    }
+                });
             });
         });
     </script>
