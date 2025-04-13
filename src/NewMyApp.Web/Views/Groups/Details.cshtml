@@ -46,6 +46,9 @@
                         </button>
                     </form>
                 }
+                <a asp-action="Chat" asp-route-id="@Model.Id" class="btn btn-info">
+                    <i class="bi bi-chat-dots"></i> Чат
+                </a>
             </div>
 
             @if (!string.IsNullOrEmpty(Model.Description))

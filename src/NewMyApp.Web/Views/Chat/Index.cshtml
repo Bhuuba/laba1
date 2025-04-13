@@ -1,0 +1,340 @@
+@model IEnumerable<NewMyApp.Core.Models.Message>
+@{
+    ViewData["Title"] = "Чат групи";
+    // Отримуємо ID поточного користувача один раз для усього виду
+    var currentUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+    // Приведення ViewBag.Group до потрібного типу
+    var group = ViewBag.Group as NewMyApp.Core.Models.Group;
+    // Приведення ViewBag.IsAdmin до типу bool
+    var isAdmin = ViewBag.IsAdmin is bool flag && flag;
+}
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-10 col-md-12 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-chat-dots me-2"></i>Чат групи: @group?.Name
+                    </h4>
+                </div>
+                <div class="card-body p-0">
+                    <!-- Секція чату -->
+                    <div id="chat-container" class="p-3" style="height: 65vh; overflow-y: auto; background-color: #f8f9fa;">
+                        @if (Model != null && Model.Any())
+                        {
+                            @foreach (var message in Model)
+                            {
+                                bool isMyMessage = message.UserId == currentUserId;
+                                <div class="message-item mb-3 @(isMyMessage ? "text-end" : "text-start")" 
+                                     data-message-id="@message.Id"
+                                     id="message-@message.Id">
+                                    <div class="d-inline-block message-bubble p-3 rounded-3 shadow-sm" 
+                                         style="max-width: 80%; background-color: @(isMyMessage ? "#dcf8c6" : "#ffffff"); border-radius: 15px;">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <strong class="text-primary">@message.User.FirstName @message.User.LastName</strong>
+                                            <span class="message-time text-muted small">
+                                                @message.SentAt.ToString("dd.MM.yyyy HH:mm")
+                                            </span>
+                                        </div>
+                                        <p class="message-content mb-0">@message.Content</p>
+                                    </div>
+                                    
+                                    @if (isMyMessage || isAdmin)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-danger delete-message-btn mt-1" 
+                                                data-message-id="@message.Id"
+                                                data-bs-toggle="tooltip" 
+                                                title="Видалити повідомлення">
+                                            <i class="bi bi-trash"></i> Видалити
+                                        </button>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="text-center my-5 text-muted">
+                                <i class="bi bi-chat-square-text fs-1"></i>
+                                <p class="mt-2">Поки що немає повідомлень. Почніть спілкування!</p>
+                            </div>
+                        }
+                    </div>
+                    
+                    <!-- Форма відправки повідомлень -->
+                    <div class="message-input-area p-3 border-top">
+                        <form id="chat-form" class="d-flex">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" id="group-id" value="@group?.Id" />
+                            <div class="input-group">
+                                <input type="text" id="chat-message" class="form-control form-control-lg" 
+                                       placeholder="Напишіть повідомлення..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary" id="send-button">
+                                    <i class="bi bi-send-fill"></i> Відправити
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Інформація про учасників групи -->
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Учасники групи</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-wrap">
+                        @foreach (var userGroup in group.UserGroups)
+                        {
+                            <div class="user-badge me-2 mb-2 p-2 bg-light rounded">
+                                <i class="bi bi-person-circle me-1"></i>
+                                @userGroup.User.FirstName @userGroup.User.LastName
+                                @if (userGroup.Role == NewMyApp.Core.Models.GroupRole.Admin)
+                                {
+                                    <span class="badge bg-warning ms-1">Адмін</span>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для підтвердження видалення -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Підтвердження видалення</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрити"></button>
+            </div>
+            <div class="modal-body">
+                <p>Ви дійсно хочете видалити це повідомлення?</p>
+                <p class="text-danger"><small>Ця дія незворотна.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Скасувати</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">Видалити</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Тост для сповіщень -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 5">
+    <div id="toast-notification" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-primary text-white">
+            <strong class="me-auto">Повідомлення</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Закрити"></button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Повідомлення успішно відправлено!
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.15/signalr.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ініціалізація тултіпів
+            const tooltipTriggerList = Array.from(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+            
+            const deleteModal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            let messageIdToDelete = null;
+            
+            const toastElement = document.getElementById('toast-notification');
+            const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+            const toastMessage = document.getElementById('toast-message');
+            
+            const chatContainer = document.getElementById("chat-container");
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl("/chatHub")
+                .configureLogging(signalR.LogLevel.Information)
+                .build();
+
+            connection.on("ReceiveMessage", function(messageHtml) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = messageHtml.trim();
+                chatContainer.appendChild(tempDiv.firstChild);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Ініціалізація тултіпів для нового повідомлення
+                tempDiv.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                    new bootstrap.Tooltip(el);
+                });
+
+                toastMessage.textContent = 'Отримано нове повідомлення';
+                toast.show();
+                setupDeleteButtons();
+            });
+
+            connection.on("MessageDeleted", function(messageId) {
+                const messageToDelete = document.querySelector(`#message-${messageId}`);
+                if (messageToDelete) {
+                    messageToDelete.style.transition = "opacity 0.3s";
+                    messageToDelete.style.opacity = "0";
+                    setTimeout(() => {
+                        messageToDelete.remove();
+                    }, 300);
+                    toastMessage.textContent = 'Повідомлення було видалено';
+                    toast.show();
+                }
+            });
+
+            connection.start()
+                .then(() => console.log("SignalR connected."))
+                .catch(err => console.error("SignalR connection error:", err));
+
+            document.getElementById("chat-form").addEventListener("submit", function(e) {
+                e.preventDefault();
+
+                const groupId = document.getElementById("group-id").value;
+                const messageInput = document.getElementById("chat-message");
+                const content = messageInput.value;
+
+                if (!content.trim()) {
+                    return;
+                }
+
+                const sendButton = document.getElementById("send-button");
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Відправка...';
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                fetch('/Chat/SendMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `groupId=${groupId}&content=${encodeURIComponent(content)}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Помилка при відправці повідомлення');
+                    }
+                    messageInput.value = "";
+                    toastMessage.textContent = 'Повідомлення успішно відправлено';
+                    toast.show();
+                })
+                .catch(error => {
+                    console.error('Помилка:', error);
+                    toastMessage.textContent = 'Помилка при відправці повідомлення';
+                    toast.show();
+                })
+                .finally(() => {
+                    sendButton.disabled = false;
+                    sendButton.innerHTML = '<i class="bi bi-send-fill"></i> Відправити';
+                    messageInput.focus();
+                });
+            });
+
+            function setupDeleteButtons() {
+                document.querySelectorAll('.delete-message-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        messageIdToDelete = this.getAttribute('data-message-id');
+                        deleteModal.show();
+                    });
+                });
+            }
+
+            document.getElementById('confirm-delete-btn').addEventListener('click', function() {
+                if (!messageIdToDelete) return;
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+                fetch('/Chat/DeleteMessage', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': token
+                    },
+                    body: `messageId=${messageIdToDelete}`
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Помилка при видаленні повідомлення');
+                    }
+                    deleteModal.hide();
+                    toastMessage.textContent = 'Повідомлення успішно видалено';
+                    toast.show();
+                })
+                .catch(error => {
+                    console.error('Помилка:', error);
+                    toastMessage.textContent = 'Помилка при видаленні повідомлення';
+                    toast.show();
+                    deleteModal.hide();
+                });
+            });
+
+            setupDeleteButtons();
+            document.getElementById('chat-message').focus();
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .message-bubble {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .message-bubble:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+        }
+
+        .message-item {
+            /* Анімація fadeIn видалена */
+        }
+
+        .text-end .message-bubble {
+            background-color: #dcf8c6 !important;
+            border-bottom-right-radius: 5px !important;
+        }
+
+        .text-start .message-bubble {
+            background-color: #ffffff !important;
+            border-bottom-left-radius: 5px !important;
+        }
+
+        .message-input-area {
+            background-color: #f8f9fa;
+        }
+
+        .user-badge {
+            transition: all 0.2s ease;
+        }
+
+        .user-badge:hover {
+            background-color: #e9ecef !important;
+            transform: translateY(-1px);
+        }
+
+        #chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        #chat-container::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 4px;
+        }
+
+        #chat-container::-webkit-scrollbar-thumb:hover {
+            background: #bbb;
+        }
+    </style>
+}

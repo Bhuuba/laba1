@@ -23,6 +23,7 @@ namespace NewMyApp.Infrastructure.Data
         public DbSet<PostView> PostViews { get; set; } = null!;
         public DbSet<GroupMember> GroupMembers { get; set; } = null!;
         public DbSet<FriendRequest> FriendRequests { get; set; } = null!;
+        public DbSet<Message> Messages { get; set; } = null!;
         
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -161,6 +162,19 @@ namespace NewMyApp.Infrastructure.Data
                 .HasOne(pv => pv.User)
                 .WithMany()
                 .HasForeignKey(pv => pv.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            // Configure Messages
+            builder.Entity<Message>()
+                .HasOne(m => m.User)
+                .WithMany()
+                .HasForeignKey(m => m.UserId)
+                .OnDelete(DeleteBehavior.NoAction);
+                
+            builder.Entity<Message>()
+                .HasOne(m => m.Group)
+                .WithMany()
+                .HasForeignKey(m => m.GroupId)
                 .OnDelete(DeleteBehavior.NoAction);
         }
     }

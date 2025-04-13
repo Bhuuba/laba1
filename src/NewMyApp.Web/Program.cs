@@ -5,6 +5,7 @@ using NewMyApp.Core.Services;
 using NewMyApp.Infrastructure.Data;
 using NewMyApp.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity.UI;
+using NewMyApp.Web.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,7 @@ builder.Services.AddDefaultIdentity<User>(options => {
 builder.Services.AddScoped<IPostViewService, PostViewService>();
 builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<ICertificateService, CertificateService>();
+builder.Services.AddSignalR();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
@@ -58,6 +60,14 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "chat",
+    pattern: "Chat/{action=Index}/{groupId?}",
+    defaults: new { controller = "Chat" });
+
+app.MapHub<ChatHub>("/chatHub");
+
 app.MapRazorPages();
 
 app.Run();

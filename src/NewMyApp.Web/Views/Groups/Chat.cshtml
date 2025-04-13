@@ -1,0 +1,37 @@
+@model NewMyApp.Core.Models.Group
+
+<div class="container mt-5">
+    <h2>Чат групи: @Model.Name</h2>
+    <div id="chat-container" class="border rounded p-3 mb-3" style="height: 400px; overflow-y: auto;">
+        <!-- Повідомлення будуть завантажені тут -->
+    </div>
+    <form id="chat-form">
+        <div class="input-group">
+            <input type="text" id="chat-message" class="form-control" placeholder="Напишіть повідомлення...">
+            <button type="submit" class="btn btn-primary">Відправити</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('chat-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = document.getElementById('chat-message').value;
+            if (message.trim() === '') return;
+
+            // Додати повідомлення до чату
+            const chatContainer = document.getElementById('chat-container');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            messageElement.classList.add('p-2', 'mb-2', 'bg-light', 'rounded');
+            chatContainer.appendChild(messageElement);
+
+            // Очистити поле вводу
+            document.getElementById('chat-message').value = '';
+
+            // Прокрутити до останнього повідомлення
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+    </script>
+}

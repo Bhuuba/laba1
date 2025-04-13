@@ -234,4 +234,26 @@ public class GroupsController : Controller
 
         return RedirectToAction(nameof(MyGroups));
     }
+
+    [HttpGet]
+    public async Task<IActionResult> Chat(int id)
+    {
+        var group = await _context.Groups
+            .Include(g => g.UserGroups)
+                .ThenInclude(ug => ug.User)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (group == null)
+        {
+            return NotFound("Група не знайдена");
+        }
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null || !group.UserGroups.Any(ug => ug.UserId == currentUser.Id))
+        {
+            return Forbid("Ви не є учасником цієї групи");
+        }
+
+        return RedirectToAction("Index", "Chat", new { groupId = id });
+    }
 }
