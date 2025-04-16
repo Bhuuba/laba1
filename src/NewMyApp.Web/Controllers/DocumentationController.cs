@@ -13,5 +13,10 @@ namespace NewMyApp.Web.Controllers
         {
             return View();
         }
+
+        public IActionResult ProjectGuide()
+        {
+            return View();
+        }
     }
 }

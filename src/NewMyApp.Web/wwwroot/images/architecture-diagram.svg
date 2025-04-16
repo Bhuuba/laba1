@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+    <!-- Presentation Layer -->
+    <rect x="50" y="50" width="700" height="100" fill="#007bff" opacity="0.1" rx="10"/>
+    <text x="400" y="100" text-anchor="middle" font-family="Arial" font-size="20" fill="#007bff">Presentation Layer (NewMyApp.Web)</text>
+    <text x="400" y="130" text-anchor="middle" font-family="Arial" font-size="14" fill="#6c757d">ASP.NET Core MVC, Bootstrap, JavaScript</text>
+
+    <!-- Business Layer -->
+    <rect x="50" y="200" width="700" height="100" fill="#28a745" opacity="0.1" rx="10"/>
+    <text x="400" y="250" text-anchor="middle" font-family="Arial" font-size="20" fill="#28a745">Business Logic Layer (NewMyApp.Core)</text>
+    <text x="400" y="280" text-anchor="middle" font-family="Arial" font-size="14" fill="#6c757d">Services, Interfaces, Models</text>
+
+    <!-- Data Layer -->
+    <rect x="50" y="350" width="700" height="100" fill="#dc3545" opacity="0.1" rx="10"/>
+    <text x="400" y="400" text-anchor="middle" font-family="Arial" font-size="20" fill="#dc3545">Data Access Layer (NewMyApp.Infrastructure)</text>
+    <text x="400" y="430" text-anchor="middle" font-family="Arial" font-size="14" fill="#6c757d">Entity Framework Core, Repositories</text>
+
+    <!-- Database -->
+    <rect x="50" y="500" width="700" height="50" fill="#ffc107" opacity="0.1" rx="10"/>
+    <text x="400" y="530" text-anchor="middle" font-family="Arial" font-size="20" fill="#ffc107">Database (SQL Server)</text>
+
+    <!-- Arrows -->
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#6c757d"/>
+        </marker>
+    </defs>
+    <line x1="400" y1="150" x2="400" y2="200" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="400" y1="300" x2="400" y2="350" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <line x1="400" y1="450" x2="400" y2="500" stroke="#6c757d" stroke-width="2" marker-end="url(#arrowhead)"/>
+</svg>

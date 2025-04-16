@@ -1,0 +1,365 @@
+@{
+    ViewData["Title"] = "Руководство по проекту";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Боковое меню навигации -->
+            <div class="list-group mb-4 sticky-top" style="top: 2rem;">
+                <a href="#architecture" class="list-group-item list-group-item-action">Архитектура проекта</a>
+                <a href="#technologies" class="list-group-item list-group-item-action">Используемые технологии</a>
+                <a href="#structure" class="list-group-item list-group-item-action">Структура проекта</a>
+                <a href="#modules" class="list-group-item list-group-item-action">Основные модули</a>
+                <a href="#database" class="list-group-item list-group-item-action">База данных</a>
+                <a href="#features" class="list-group-item list-group-item-action">Ключевые функции</a>
+                <a href="#deployment" class="list-group-item list-group-item-action">Развертывание</a>
+                <a href="#best-practices" class="list-group-item list-group-item-action">Лучшие практики</a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <h1 class="mb-4">@ViewData["Title"]</h1>
+
+            <!-- Архитектура -->
+            <section id="architecture" class="mb-5">
+                <h2 class="border-bottom pb-2">Архитектура проекта</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Многоуровневая архитектура:</h5>
+                        <ol>
+                            <li>
+                                <strong>Presentation Layer (NewMyApp.Web)</strong>
+                                <p>Веб-интерфейс на ASP.NET Core MVC с поддержкой Bootstrap 5 и современных JavaScript библиотек.</p>
+                            </li>
+                            <li>
+                                <strong>Business Logic Layer (NewMyApp.Core)</strong>
+                                <p>Содержит бизнес-логику, интерфейсы и модели данных.</p>
+                            </li>
+                            <li>
+                                <strong>Data Access Layer (NewMyApp.Infrastructure)</strong>
+                                <p>Реализует доступ к данным через Entity Framework Core.</p>
+                            </li>
+                        </ol>
+                        <div class="text-center">
+                            <img src="/images/architecture-diagram.png" alt="Архитектура проекта" class="img-fluid rounded shadow-sm">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Технологии -->
+            <section id="technologies" class="mb-5">
+                <h2 class="border-bottom pb-2">Используемые технологии</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Backend:</h5>
+                                <ul>
+                                    <li>.NET 6.0</li>
+                                    <li>ASP.NET Core MVC</li>
+                                    <li>Entity Framework Core</li>
+                                    <li>Identity Framework</li>
+                                    <li>QuestPDF</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Frontend:</h5>
+                                <ul>
+                                    <li>Bootstrap 5</li>
+                                    <li>jQuery</li>
+                                    <li>Font Awesome</li>
+                                    <li>Toastr</li>
+                                    <li>Particles.js</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Структура -->
+            <section id="structure" class="mb-5">
+                <h2 class="border-bottom pb-2">Структура проекта</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <pre class="bg-light p-3 rounded">
+NewMyApp/
+├── NewMyApp.Core/           # Бизнес-логика и модели
+│   ├── Models/             # Сущности
+│   ├── Interfaces/         # Интерфейсы репозиториев
+│   └── Services/          # Сервисы
+├── NewMyApp.Infrastructure/ # Доступ к данным
+│   ├── Data/              # Контекст БД
+│   ├── Repositories/      # Реализации репозиториев
+│   └── Services/         # Реализации сервисов
+└── NewMyApp.Web/          # Веб-приложение
+    ├── Controllers/       # Контроллеры MVC
+    ├── Views/            # Представления
+    ├── Models/           # Модели представлений
+    └── wwwroot/         # Статические файлы</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Модули -->
+            <section id="modules" class="mb-5">
+                <h2 class="border-bottom pb-2">Основные модули</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="accordion" id="modulesAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#userModule">
+                                        Модуль пользователей
+                                    </button>
+                                </h2>
+                                <div id="userModule" class="accordion-collapse collapse show" data-bs-parent="#modulesAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Регистрация и авторизация</li>
+                                            <li>Профили пользователей</li>
+                                            <li>Управление настройками</li>
+                                            <li>Система друзей</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#postsModule">
+                                        Модуль постов
+                                    </button>
+                                </h2>
+                                <div id="postsModule" class="accordion-collapse collapse" data-bs-parent="#modulesAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Создание и редактирование постов</li>
+                                            <li>Система лайков</li>
+                                            <li>Комментарии</li>
+                                            <li>Теги</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#groupsModule">
+                                        Модуль групп
+                                    </button>
+                                </h2>
+                                <div id="groupsModule" class="accordion-collapse collapse" data-bs-parent="#modulesAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li>Создание групп</li>
+                                            <li>Управление участниками</li>
+                                            <li>Групповые посты</li>
+                                            <li>Роли и разрешения</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- База данных -->
+            <section id="database" class="mb-5">
+                <h2 class="border-bottom pb-2">База данных</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Основные таблицы:</h5>
+                        <ul>
+                            <li>
+                                <strong>Users</strong>
+                                <p>Хранит информацию о пользователях, включая профили и настройки.</p>
+                            </li>
+                            <li>
+                                <strong>Posts</strong>
+                                <p>Содержит все посты пользователей и групп.</p>
+                            </li>
+                            <li>
+                                <strong>Groups</strong>
+                                <p>Информация о группах и их настройках.</p>
+                            </li>
+                            <li>
+                                <strong>Comments</strong>
+                                <p>Комментарии к постам.</p>
+                            </li>
+                            <li>
+                                <strong>Friendships</strong>
+                                <p>Связи между пользователями (друзья).</p>
+                            </li>
+                        </ul>
+                        <div class="alert alert-info">
+                            <strong>Миграции:</strong> Все изменения схемы базы данных отслеживаются через миграции Entity Framework Core.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Функции -->
+            <section id="features" class="mb-5">
+                <h2 class="border-bottom pb-2">Ключевые функции</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-user-circle text-primary me-2"></i>
+                                            Пользовательские функции
+                                        </h5>
+                                        <ul>
+                                            <li>Регистрация и авторизация</li>
+                                            <li>Управление профилем</li>
+                                            <li>Система друзей</li>
+                                            <li>Уведомления</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <i class="fas fa-newspaper text-success me-2"></i>
+                                            Работа с контентом
+                                        </h5>
+                                        <ul>
+                                            <li>Создание постов</li>
+                                            <li>Комментирование</li>
+                                            <li>Лайки</li>
+                                            <li>Теги и поиск</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Развертывание -->
+            <section id="deployment" class="mb-5">
+                <h2 class="border-bottom pb-2">Развертывание</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Требования к серверу:</h5>
+                        <ul>
+                            <li>.NET 6.0 Runtime</li>
+                            <li>SQL Server</li>
+                            <li>IIS или другой веб-сервер</li>
+                        </ul>
+                        <div class="alert alert-warning">
+                            <strong>Важно!</strong> Перед развертыванием убедитесь, что все необходимые переменные окружения настроены правильно.
+                        </div>
+                        <h5>Шаги развертывания:</h5>
+                        <ol>
+                            <li>Публикация проекта</li>
+                            <li>Настройка базы данных</li>
+                            <li>Конфигурация веб-сервера</li>
+                            <li>Настройка SSL</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Лучшие практики -->
+            <section id="best-practices" class="mb-5">
+                <h2 class="border-bottom pb-2">Лучшие практики</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Разработка:</h5>
+                        <ul>
+                            <li>Следуйте принципам SOLID</li>
+                            <li>Используйте Dependency Injection</li>
+                            <li>Пишите модульные тесты</li>
+                            <li>Документируйте код</li>
+                        </ul>
+                        <h5>Безопасность:</h5>
+                        <ul>
+                            <li>Используйте HTTPS</li>
+                            <li>Проверяйте входные данные</li>
+                            <li>Применяйте принцип наименьших привилегий</li>
+                            <li>Регулярно обновляйте пакеты</li>
+                        </ul>
+                        <div class="alert alert-success">
+                            <strong>Tip:</strong> Используйте Code Analysis и StyleCop для поддержания качества кода.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Плавная прокрутка к разделам
+        document.querySelectorAll('.list-group-item').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Подсветка активного пункта меню при скролле
+        window.addEventListener('scroll', function() {
+            let sections = document.querySelectorAll('section');
+            let navItems = document.querySelectorAll('.list-group-item');
+            
+            sections.forEach((section, i) => {
+                let top = section.offsetTop - 100;
+                let bottom = top + section.offsetHeight;
+                
+                if (window.scrollY >= top && window.scrollY < bottom) {
+                    navItems.forEach(item => item.classList.remove('active'));
+                    navItems[i].classList.add('active');
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .sticky-top {
+            top: 2rem;
+        }
+
+        section {
+            scroll-margin-top: 2rem;
+        }
+
+        .list-group-item.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        pre {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        code {
+            color: #d63384;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background-color: rgba(13, 110, 253, 0.1);
+            color: #0d6efd;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+    </style>
+}
