@@ -8,8 +8,11 @@ using NewMyApp.Infrastructure.Data;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
+using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using QuestPDF.Elements;
 
 namespace NewMyApp.Web.Controllers
 {
@@ -56,6 +59,7 @@ namespace NewMyApp.Web.Controllers
             QuestPDF.Settings.License = LicenseType.Community;
 
             var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser == null) return NotFound();
 
             var userWithPosts = await _context.Users
                 .Where(u => u.Id == currentUser.Id)
@@ -63,28 +67,22 @@ namespace NewMyApp.Web.Controllers
                     .ThenInclude(p => p.Likes)
                 .FirstOrDefaultAsync();
 
-            var totalLikes = userWithPosts.Posts.Sum(p => p.Likes.Count);
+            if (userWithPosts == null) return NotFound();
 
+            var totalLikes = userWithPosts.Posts.Sum(p => p.Likes.Count);
             var allUsers = await _context.Users
                 .Include(u => u.Posts)
                     .ThenInclude(p => p.Likes)
                 .ToListAsync();
 
             var rankedUsers = allUsers
-                .Select(u => new
-                {
-                    User = u,
-                    TotalLikes = u.Posts.Sum(p => p.Likes.Count)
-                })
+                .Select(u => new { User = u, TotalLikes = u.Posts.Sum(p => p.Likes.Count) })
                 .OrderByDescending(u => u.TotalLikes)
                 .ToList();
 
             var rank = rankedUsers.FindIndex(u => u.User.Id == currentUser.Id) + 1;
 
-            if (rank != 1)
-            {
-                return Forbid();
-            }
+            if (rank != 1) return Forbid();
 
             var pdf = Document.Create(container =>
             {
@@ -93,19 +91,64 @@ namespace NewMyApp.Web.Controllers
                     page.Size(PageSizes.A4);
                     page.Margin(2, Unit.Centimetre);
                     page.DefaultTextStyle(x => x.FontSize(20));
+                    page.Background(Colors.White);
 
-                    page.Header().Text("Сертифікат переможця").SemiBold().FontSize(36).AlignCenter();
+                    // Заголовок
+                    page.Header().Row(row =>
+                    {
+                        row.RelativeItem().Background(Colors.Blue.Lighten3).Padding(20).Column(col =>
+                        {
+                            col.Item().AlignCenter().Text("Сертифікат Досягнень")
+                                .SemiBold()
+                                .FontSize(36)
+                                .FontColor(Colors.Grey.Darken4);
+                        });
+                    });
+
+                    // Основной контент
                     page.Content().PaddingVertical(1, Unit.Centimetre).Column(col =>
                     {
-                        col.Item().Text($"Цей сертифікат підтверджує, що {currentUser.FirstName} {currentUser.LastName}");
-                        col.Item().Text($"здобув перше місце у рейтингу користувачів за кількістю лайків.");
-                        col.Item().Text($"Загальна кількість лайків: {totalLikes}");
-                        col.Item().Text($"Ранг: {rank}");
+                        col.Item().AlignCenter().Text("🏆").FontSize(50);
+                        
+                        col.Item().AlignCenter().PaddingVertical(20).Text("Цей сертифікат засвідчує, що")
+                            .FontSize(16)
+                            .FontColor(Colors.Grey.Medium);
+
+                        col.Item().AlignCenter().Text($"{currentUser.FirstName} {currentUser.LastName}")
+                            .SemiBold()
+                            .FontSize(28)
+                            .FontColor(Colors.Blue.Darken2);
+
+                        col.Item().AlignCenter().PaddingTop(10)
+                            .Text("здобув перше місце у рейтингу користувачів")
+                            .FontSize(18);
+
+                        col.Item().PaddingVertical(20).AlignCenter().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(statCol =>
+                        {
+                            statCol.Item().AlignCenter().Text("Загальна кількість лайків")
+                                .FontSize(14)
+                                .FontColor(Colors.Grey.Medium);
+                            statCol.Item().AlignCenter().Text(totalLikes.ToString())
+                                .SemiBold()
+                                .FontSize(24)
+                                .FontColor(Colors.Blue.Darken2);
+                        });
+
+                        col.Item().PaddingTop(20).AlignCenter()
+                            .Text($"Дата видачі: {DateTime.Now:dd.MM.yyyy}")
+                            .FontSize(14)
+                            .FontColor(Colors.Grey.Medium);
                     });
-                    page.Footer().AlignCenter().Text(txt =>
+
+                    // Футер
+                    page.Footer().AlignCenter().Column(col =>
                     {
-                        txt.Span("NewMyApp © ").FontSize(12);
-                        txt.Span($"{DateTime.UtcNow.Year}").FontSize(12);
+                        col.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
+                        col.Item().PaddingTop(10).Text(text =>
+                        {
+                            text.Span("NewMyApp © ").FontSize(12).FontColor(Colors.Grey.Medium);
+                            text.Span(DateTime.Now.Year.ToString()).FontSize(12).FontColor(Colors.Grey.Medium);
+                        });
                     });
                 });
             });
@@ -121,23 +164,15 @@ namespace NewMyApp.Web.Controllers
         public async Task<IActionResult> LikePost(int id)
         {
             var post = await _context.Posts.Include(p => p.Likes).FirstOrDefaultAsync(p => p.Id == id);
-
-            if (post == null)
-            {
-                return NotFound();
-            }
+            if (post == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
-
-            if (post.Likes.Any(l => l.UserId == currentUser.Id))
-            {
-                return NoContent(); // Если уже лайкнуто, ничего не возвращаем
-            }
+            if (post.Likes.Any(l => l.UserId == currentUser.Id)) return NoContent();
 
             post.Likes.Add(new Like { UserId = currentUser.Id });
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Убираем вывод JSON, возвращаем пустой ответ
+            return NoContent();
         }
     }
 }
