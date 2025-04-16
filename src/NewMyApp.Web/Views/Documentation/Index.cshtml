@@ -1,0 +1,65 @@
+@{
+    ViewData["Title"] = "Документация";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="text-center mb-5">@ViewData["Title"]</h1>
+
+            <div class="row">
+                <!-- PDF Guide Card -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>
+                                Руководство по PDF
+                            </h5>
+                            <p class="card-text">
+                                Полное руководство по реализации и использованию системы генерации PDF в проекте.
+                                Включает примеры кода, советы по отладке и лучшие практики.
+                            </p>
+                            <a asp-action="PdfGuide" class="btn btn-primary">
+                                <i class="fas fa-book-reader me-2"></i>
+                                Читать руководство
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project Structure -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm hover-card">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <i class="fas fa-project-diagram text-success me-2"></i>
+                                Структура проекта
+                            </h5>
+                            <p class="card-text">
+                                Обзор архитектуры проекта, используемых технологий и основных компонентов системы.
+                            </p>
+                            <a href="#" class="btn btn-success">
+                                <i class="fas fa-sitemap me-2"></i>
+                                Изучить структуру
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+        }
+    </style>
+}

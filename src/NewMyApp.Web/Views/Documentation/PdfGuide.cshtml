@@ -1,0 +1,280 @@
+@{
+    ViewData["Title"] = "Руководство по работе с PDF";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Боковое меню навигации -->
+            <div class="list-group mb-4 sticky-top" style="top: 2rem;">
+                <a href="#debug" class="list-group-item list-group-item-action">Отладка в VS Code</a>
+                <a href="#project-setup" class="list-group-item list-group-item-action">Настройка проекта</a>
+                <a href="#packages" class="list-group-item list-group-item-action">Необходимые пакеты</a>
+                <a href="#architecture" class="list-group-item list-group-item-action">Архитектура PDF системы</a>
+                <a href="#implementation" class="list-group-item list-group-item-action">Реализация PDF</a>
+                <a href="#usage" class="list-group-item list-group-item-action">Использование</a>
+                <a href="#tips" class="list-group-item list-group-item-action">Советы и трюки</a>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <h1 class="mb-4">@ViewData["Title"]</h1>
+
+            <!-- Отладка -->
+            <section id="debug" class="mb-5">
+                <h2 class="border-bottom pb-2">Отладка в Visual Studio Code</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Настройка отладки</h5>
+                        <ol>
+                            <li>Установите расширение C# для VS Code</li>
+                            <li>Создайте конфигурацию запуска (.vscode/launch.json)</li>
+                            <li>Добавьте точки останова (breakpoints) в код</li>
+                            <li>Используйте F5 для запуска отладки</li>
+                        </ol>
+                        <div class="alert alert-info">
+                            <strong>Совет:</strong> Используйте комбинацию клавиш Shift+F5 для остановки отладки, F10 для пошагового выполнения.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Настройка проекта -->
+            <section id="project-setup" class="mb-5">
+                <h2 class="border-bottom pb-2">Настройка проекта</h2>
+                <div class="alert alert-warning">
+                    <strong>Важно!</strong> Перед началом работы убедитесь, что у вас установлен .NET SDK 6.0 или выше.
+                </div>
+                <h4>Структура проекта:</h4>
+                <pre class="bg-light p-3 rounded">
+NewMyApp/
+├── NewMyApp.Core/
+│   └── Services/
+│       ├── IPdfService.cs
+│       └── ICertificateService.cs
+├── NewMyApp.Infrastructure/
+│   └── Services/
+│       ├── PdfService.cs
+│       └── CertificateService.cs
+└── NewMyApp.Web/
+    └── Controllers/
+        └── RatingController.cs</pre>
+            </section>
+
+            <!-- Необходимые пакеты -->
+            <section id="packages" class="mb-5">
+                <h2 class="border-bottom pb-2">Необходимые пакеты</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Основные пакеты:</h5>
+                        <ul>
+                            <li>
+                                <strong>QuestPDF (2025.4.0)</strong>
+                                <p>Современная библиотека для создания PDF документов с элегантным Fluent API.</p>
+                            </li>
+                        </ul>
+                        <div class="bg-light p-3 rounded">
+                            <code>dotnet add package QuestPDF --version 2025.4.0</code>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Архитектура -->
+            <section id="architecture" class="mb-5">
+                <h2 class="border-bottom pb-2">Архитектура PDF системы</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Компоненты системы:</h5>
+                        <ol>
+                            <li>
+                                <strong>IPdfService</strong>
+                                <p>Интерфейс, определяющий базовые операции с PDF.</p>
+                            </li>
+                            <li>
+                                <strong>ICertificateService</strong>
+                                <p>Интерфейс для создания сертификатов достижений.</p>
+                            </li>
+                            <li>
+                                <strong>PdfService</strong>
+                                <p>Реализация создания PDF документов.</p>
+                            </li>
+                            <li>
+                                <strong>RatingController</strong>
+                                <p>Контроллер для генерации сертификатов рейтинга.</p>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Реализация -->
+            <section id="implementation" class="mb-5">
+                <h2 class="border-bottom pb-2">Реализация PDF</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Основные шаги реализации:</h5>
+                        <ol>
+                            <li>
+                                <strong>Настройка DI в Startup.cs</strong>
+                                <pre class="bg-light p-3 rounded">
+services.AddScoped<IPdfService, PdfService>();
+services.AddScoped<ICertificateService, CertificateService>();</pre>
+                            </li>
+                            <li>
+                                <strong>Создание PDF документа</strong>
+                                <pre class="bg-light p-3 rounded">
+var pdf = Document.Create(container => {
+    container.Page(page => {
+        page.Size(PageSizes.A4);
+        page.Margin(2, Unit.Centimetre);
+        // Добавление контента
+    });
+});</pre>
+                            </li>
+                            <li>
+                                <strong>Стилизация документа</strong>
+                                <pre class="bg-light p-3 rounded">
+// Заголовок
+page.Header().Row(row => {
+    row.RelativeItem().Background(Colors.Blue.Lighten3)
+       .Padding(20).Column(col => {
+        col.Item().AlignCenter()
+           .Text("Сертифікат")
+           .FontSize(36);
+    });
+});</pre>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Использование -->
+            <section id="usage" class="mb-5">
+                <h2 class="border-bottom pb-2">Использование</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Создание сертификата:</h5>
+                        <ol>
+                            <li>
+                                <strong>В контроллере:</strong>
+                                <pre class="bg-light p-3 rounded">
+public async Task<IActionResult> DownloadTopUserPdf()
+{
+    // Настройка
+    QuestPDF.Settings.License = LicenseType.Community;
+
+    // Создание документа
+    var pdf = Document.Create(container => {
+        // Конфигурация
+    });
+
+    // Генерация и возврат
+    var stream = new MemoryStream();
+    pdf.GeneratePdf(stream);
+    return File(stream, "application/pdf", "certificate.pdf");
+}</pre>
+                            </li>
+                        </ol>
+
+                        <h5>Добавление изображений и стилей:</h5>
+                        <pre class="bg-light p-3 rounded">
+// Добавление эмодзи
+col.Item().AlignCenter().Text("🏆").FontSize(50);
+
+// Стилизация текста
+col.Item().AlignCenter()
+   .Text("User Name")
+   .FontSize(28)
+   .FontColor(Colors.Blue.Darken2);</pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Советы -->
+            <section id="tips" class="mb-5">
+                <h2 class="border-bottom pb-2">Советы и трюки</h2>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5>Оптимизация производительности:</h5>
+                        <ul>
+                            <li>Используйте MemoryStream вместо FileStream для временных операций</li>
+                            <li>Избегайте повторной генерации одинаковых PDF</li>
+                            <li>Используйте кэширование для часто запрашиваемых документов</li>
+                        </ul>
+
+                        <h5>Советы по дизайну:</h5>
+                        <ul>
+                            <li>Используйте единую цветовую схему</li>
+                            <li>Соблюдайте иерархию текста через размеры шрифтов</li>
+                            <li>Добавляйте отступы для улучшения читаемости</li>
+                            <li>Используйте разделители и границы для структурирования контента</li>
+                        </ul>
+
+                        <div class="alert alert-success">
+                            <strong>Best Practice:</strong> Всегда проверяйте сгенерированный PDF на различных устройствах и в разных просмотрщиках.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Плавная прокрутка к разделам
+        document.querySelectorAll('.list-group-item').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+
+        // Подсветка активного пункта меню при скролле
+        window.addEventListener('scroll', function() {
+            let sections = document.querySelectorAll('section');
+            let navItems = document.querySelectorAll('.list-group-item');
+            
+            sections.forEach((section, i) => {
+                let top = section.offsetTop - 100;
+                let bottom = top + section.offsetHeight;
+                
+                if (window.scrollY >= top && window.scrollY < bottom) {
+                    navItems.forEach(item => item.classList.remove('active'));
+                    navItems[i].classList.add('active');
+                }
+            });
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .sticky-top {
+            top: 2rem;
+        }
+
+        section {
+            scroll-margin-top: 2rem;
+        }
+
+        .list-group-item.active {
+            background-color: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+        }
+
+        pre {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        code {
+            color: #d63384;
+        }
+    </style>
+}
