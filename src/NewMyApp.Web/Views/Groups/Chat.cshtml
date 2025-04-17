@@ -43,14 +43,22 @@
                     <div class="chat-messages" id="chat-messages">
                         @foreach (var message in ViewBag.Messages)
                         {
-                            <div class="message @(message.UserId == ViewBag.CurrentUserId ? "own" : "")">
+                            <div class="message @(message.UserId == currentUser?.Id ? "own" : "")" id="message-@message.Id">
                                 <div class="message-content">
                                     <img src="@(string.IsNullOrEmpty(message.User.ProfilePicture) ? "/images/default-avatar.png" : message.User.ProfilePicture)" 
                                          class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                                    <div>
+                                    <div class="message-body">
                                         <div class="message-header">
                                             <span class="message-author">@message.User.UserName</span>
                                             <small class="text-muted">@message.CreatedAt.ToString("HH:mm")</small>
+                                            @if (message.UserId == currentUser?.Id)
+                                            {
+                                                <button class="btn btn-link text-danger p-0 ms-2 delete-message" 
+                                                        data-message-id="@message.Id" 
+                                                        title="Видалити повідомлення">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
                                         </div>
                                         <div class="message-text">@message.Content</div>
                                     </div>
@@ -100,17 +108,41 @@
             }
         });
 
+        // Обработка удаления сообщений
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-message')) {
+                const button = e.target.closest('.delete-message');
+                const messageId = button.dataset.messageId;
+                
+                if (confirm('Ви впевнені, що хочете видалити це повідомлення?')) {
+                    try {
+                        await connection.invoke("DeleteMessage", parseInt(messageId));
+                    } catch (err) {
+                        console.error(err);
+                        toastr.error('Помилка при видаленні повідомлення');
+                    }
+                }
+            }
+        });
+
         connection.on("ReceiveMessage", (message) => {
-            const isOwn = message.userId === '@ViewBag.CurrentUserId';
+            const isOwn = message.userId === '@currentUser?.Id';
             const messageHtml = `
-                <div class="message ${isOwn ? 'own' : ''}">
+                <div class="message ${isOwn ? 'own' : ''}" id="message-${message.messageId}">
                     <div class="message-content">
                         <img src="${message.userAvatar || '/images/default-avatar.png'}" 
                              class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                        <div>
+                        <div class="message-body">
                             <div class="message-header">
                                 <span class="message-author">${message.userName}</span>
                                 <small class="text-muted">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                                ${isOwn ? `
+                                    <button class="btn btn-link text-danger p-0 ms-2 delete-message" 
+                                            data-message-id="${message.messageId}" 
+                                            title="Видалити повідомлення">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                ` : ''}
                             </div>
                             <div class="message-text">${message.content}</div>
                         </div>
@@ -119,6 +151,13 @@
             `;
             chatMessages.insertAdjacentHTML('beforeend', messageHtml);
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        connection.on("MessageDeleted", (messageId) => {
+            const messageElement = document.getElementById(`message-${messageId}`);
+            if (messageElement) {
+                messageElement.remove();
+            }
         });
 
         connection.start()

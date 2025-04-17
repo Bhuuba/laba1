@@ -1,0 +1,1 @@
+// Файл видалено, бо дублює реалізацію ChatService. Вся логіка чату має бути в src/NewMyApp.Infrastructure/Services/Chat/ChatService.cs

@@ -23,6 +23,7 @@ namespace NewMyApp.Infrastructure.Data
         public DbSet<PostView> PostViews { get; set; } = null!;
         public DbSet<GroupMember> GroupMembers { get; set; } = null!;
         public DbSet<FriendRequest> FriendRequests { get; set; } = null!;
+        public DbSet<ChatMessage> ChatMessages { get; set; } = null!;
         
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -162,6 +163,19 @@ namespace NewMyApp.Infrastructure.Data
                 .WithMany()
                 .HasForeignKey(pv => pv.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure ChatMessages
+            builder.Entity<ChatMessage>()
+                .HasOne(cm => cm.User)
+                .WithMany()
+                .HasForeignKey(cm => cm.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ChatMessage>()
+                .HasOne(cm => cm.Group)
+                .WithMany()
+                .HasForeignKey(cm => cm.GroupId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
-} 
+}

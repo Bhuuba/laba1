@@ -76,7 +76,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  justify-content: space-between;
   margin-bottom: 0.25rem;
   font-size: 0.85em;
 }
@@ -179,4 +178,13 @@
 
 .status-dot.online {
   background-color: #31a24c;
+}
+
+.delete-message {
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.message:hover .delete-message {
+  opacity: 1;
 }

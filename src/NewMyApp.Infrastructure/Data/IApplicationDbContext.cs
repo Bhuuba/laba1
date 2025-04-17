@@ -16,6 +16,7 @@ public interface IApplicationDbContext
     DbSet<PostView> PostViews { get; set; }
     DbSet<GroupMember> GroupMembers { get; set; }
     DbSet<FriendRequest> FriendRequests { get; set; }
+    DbSet<ChatMessage> ChatMessages { get; set; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
-} 
+}
