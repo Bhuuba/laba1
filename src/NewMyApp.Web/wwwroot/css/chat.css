@@ -22,6 +22,7 @@
 
 .message {
   margin-bottom: 1rem;
+  animation: fadeIn 0.3s ease-in-out;
 }
 
 .message-container {
@@ -33,7 +34,7 @@
 .message-content {
   display: flex;
   align-items: start;
-  max-width: 70%;
+  /* max-width: 70%; */
   background-color: #f0f2f5;
   padding: 10px 15px;
   border-radius: 15px;
@@ -47,6 +48,8 @@
 
 .message.own .message-content {
   flex-direction: row-reverse;
+  background-color: #0084ff;
+  color: white;
 }
 
 .message-left {
@@ -96,16 +99,12 @@
 }
 
 .message-text {
-  background-color: #f8f9fa;
-  padding: 0.75rem;
-  border-radius: 1rem;
   word-break: break-word;
   word-wrap: break-word;
   white-space: pre-wrap;
 }
 
 .message.own .message-text {
-  background-color: #0d6efd;
   color: white;
 }
 
@@ -183,8 +182,41 @@
 .delete-message {
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  position: absolute;
+  right: -25px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .message:hover .delete-message {
   opacity: 1;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }

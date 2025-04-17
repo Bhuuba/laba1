@@ -1,6 +1,6 @@
+@model NewMyApp.Core.Models.Group
 @using Microsoft.AspNetCore.Identity
 @using NewMyApp.Core.Models
-@model NewMyApp.Core.Models.Group
 @inject UserManager<User> UserManager
 
 @{
@@ -11,19 +11,23 @@
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-3">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Учасники чату</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>Учасники чату</h5>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-0">
                     <div class="list-group list-group-flush">
                         @foreach (var userGroup in Model.UserGroups)
                         {
-                            <div class="list-group-item">
+                            <div class="list-group-item border-0">
                                 <div class="d-flex align-items-center">
-                                    <img src="@(string.IsNullOrEmpty(userGroup.User.ProfilePicture) ? "/images/default-avatar.png" : userGroup.User.ProfilePicture)" 
-                                         class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
-                                    <div>
+                                    <div class="position-relative">
+                                        <img src="@(string.IsNullOrEmpty(userGroup.User.ProfilePicture) ? "/images/default-avatar.png" : userGroup.User.ProfilePicture)" 
+                                             class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                        <span class="status-dot @(userGroup.User.LastActive >= DateTime.UtcNow.AddMinutes(-5) ? "online" : "")" 
+                                              style="position: absolute; bottom: 0; right: 0;"></span>
+                                    </div>
+                                    <div class="ms-3">
                                         <h6 class="mb-0">@userGroup.User.UserName</h6>
                                         <small class="text-muted">@(userGroup.Role == GroupRole.Admin ? "Адміністратор" : "Учасник")</small>
                                     </div>
@@ -35,28 +39,59 @@
             </div>
         </div>
         <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">@Model.Name</h5>
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <img src="@(string.IsNullOrEmpty(Model.CoverImage) ? "/images/default-group.png" : Model.CoverImage)" 
+                                 class="rounded-circle me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                            <div>
+                                <h5 class="mb-0">@Model.Name</h5>
+                                <small class="text-muted">@Model.UserGroups.Count учасників</small>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body chat-container">
+                <div class="chat-container">
                     <div class="chat-messages" id="chat-messages">
                         @foreach (var message in ViewBag.Messages)
                         {
                             <div class="message @(message.UserId == currentUser?.Id ? "own" : "")" id="message-@message.Id">
                                 <div class="message-content">
-                                    <img src="@(string.IsNullOrEmpty(message.User.ProfilePicture) ? "/images/default-avatar.png" : message.User.ProfilePicture)" 
-                                         class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div class="message-avatar">
+                                        <img src="@(string.IsNullOrEmpty(message.User.ProfilePicture) ? "/images/default-avatar.png" : message.User.ProfilePicture)" 
+                                             alt="@message.User.UserName">
+                                    </div>
                                     <div class="message-body">
                                         <div class="message-header">
                                             <span class="message-author">@message.User.UserName</span>
-                                            <small class="text-muted">@message.CreatedAt.ToString("HH:mm")</small>
+                                            <span class="message-time" title="@message.CreatedAt.ToString("dd.MM.yyyy HH:mm")">
+                                                @{
+                                                    var timeAgo = DateTime.UtcNow - message.CreatedAt;
+                                                    if (timeAgo.TotalMinutes < 1)
+                                                    {
+                                                        <text>тільки що</text>
+                                                    }
+                                                    else if (timeAgo.TotalHours < 1)
+                                                    {
+                                                        <text>@((int)timeAgo.TotalMinutes) хв тому</text>
+                                                    }
+                                                    else if (timeAgo.TotalDays < 1)
+                                                    {
+                                                        <text>@((int)timeAgo.TotalHours) год тому</text>
+                                                    }
+                                                    else
+                                                    {
+                                                        <text>@message.CreatedAt.ToString("HH:mm")</text>
+                                                    }
+                                                }
+                                            </span>
                                             @if (message.UserId == currentUser?.Id)
                                             {
                                                 <button class="btn btn-link text-danger p-0 ms-2 delete-message" 
                                                         data-message-id="@message.Id" 
                                                         title="Видалити повідомлення">
-                                                    <i class="bi bi-trash"></i>
+                                                    <i class="bi bi-trash3"></i>
                                                 </button>
                                             }
                                         </div>
@@ -67,11 +102,15 @@
                         }
                     </div>
                     <div class="chat-input">
-                        <form id="message-form" class="d-flex">
+                        <form id="message-form" class="d-flex align-items-center">
                             <input type="hidden" id="group-id" value="@Model.Id" />
-                            <input type="text" id="message-input" class="form-control me-2" placeholder="Введіть повідомлення...">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send"></i>
+                            <div class="flex-grow-1 me-2">
+                                <input type="text" id="message-input" class="form-control" 
+                                       placeholder="Напишіть повідомлення..." 
+                                       autocomplete="off">
+                            </div>
+                            <button type="submit" class="btn" id="sendButton">
+                                <i class="bi bi-send-fill"></i>
                             </button>
                         </form>
                     </div>
@@ -94,6 +133,18 @@
         const chatMessages = document.getElementById('chat-messages');
         const groupId = document.getElementById('group-id').value;
 
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const messageDate = new Date(date);
+            const diff = Math.floor((now - messageDate) / 1000);
+
+            if (diff < 60) return 'тільки що';
+            if (diff < 3600) return Math.floor(diff / 60) + ' хв тому';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' год тому';
+            
+            return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
         messageForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const content = messageInput.value.trim();
@@ -108,7 +159,6 @@
             }
         });
 
-        // Обработка удаления сообщений
         document.addEventListener('click', async (e) => {
             if (e.target.closest('.delete-message')) {
                 const button = e.target.closest('.delete-message');
@@ -130,17 +180,19 @@
             const messageHtml = `
                 <div class="message ${isOwn ? 'own' : ''}" id="message-${message.messageId}">
                     <div class="message-content">
-                        <img src="${message.userAvatar || '/images/default-avatar.png'}" 
-                             class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                        <div class="message-avatar">
+                            <img src="${message.userAvatar || '/images/default-avatar.png'}" 
+                                 alt="${message.userName}">
+                        </div>
                         <div class="message-body">
                             <div class="message-header">
                                 <span class="message-author">${message.userName}</span>
-                                <small class="text-muted">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                                <span class="message-time">тільки що</span>
                                 ${isOwn ? `
                                     <button class="btn btn-link text-danger p-0 ms-2 delete-message" 
                                             data-message-id="${message.messageId}" 
                                             title="Видалити повідомлення">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash3"></i>
                                     </button>
                                 ` : ''}
                             </div>
@@ -156,7 +208,8 @@
         connection.on("MessageDeleted", (messageId) => {
             const messageElement = document.getElementById(`message-${messageId}`);
             if (messageElement) {
-                messageElement.remove();
+                messageElement.classList.add('animate__fadeOut');
+                setTimeout(() => messageElement.remove(), 300);
             }
         });
 
@@ -164,7 +217,14 @@
             .then(() => connection.invoke("JoinGroup", groupId))
             .catch(err => console.error(err));
 
-        // Прокрутка к последнему сообщению при загрузке
         chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Обработка Enter для отправки сообщения
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                messageForm.dispatchEvent(new Event('submit'));
+            }
+        });
     </script>
 }
