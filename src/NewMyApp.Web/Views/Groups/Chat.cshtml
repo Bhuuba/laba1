@@ -1,0 +1,131 @@
+@using Microsoft.AspNetCore.Identity
+@using NewMyApp.Core.Models
+@model NewMyApp.Core.Models.Group
+@inject UserManager<User> UserManager
+
+@{
+    ViewData["Title"] = $"Чат групи {Model.Name}";
+    var currentUser = await UserManager.GetUserAsync(User);
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Учасники чату</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group list-group-flush">
+                        @foreach (var userGroup in Model.UserGroups)
+                        {
+                            <div class="list-group-item">
+                                <div class="d-flex align-items-center">
+                                    <img src="@(string.IsNullOrEmpty(userGroup.User.ProfilePicture) ? "/images/default-avatar.png" : userGroup.User.ProfilePicture)" 
+                                         class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div>
+                                        <h6 class="mb-0">@userGroup.User.UserName</h6>
+                                        <small class="text-muted">@(userGroup.Role == GroupRole.Admin ? "Адміністратор" : "Учасник")</small>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">@Model.Name</h5>
+                </div>
+                <div class="card-body chat-container">
+                    <div class="chat-messages" id="chat-messages">
+                        @foreach (var message in ViewBag.Messages)
+                        {
+                            <div class="message @(message.UserId == ViewBag.CurrentUserId ? "own" : "")">
+                                <div class="message-content">
+                                    <img src="@(string.IsNullOrEmpty(message.User.ProfilePicture) ? "/images/default-avatar.png" : message.User.ProfilePicture)" 
+                                         class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                    <div>
+                                        <div class="message-header">
+                                            <span class="message-author">@message.User.UserName</span>
+                                            <small class="text-muted">@message.CreatedAt.ToString("HH:mm")</small>
+                                        </div>
+                                        <div class="message-text">@message.Content</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="chat-input">
+                        <form id="message-form" class="d-flex">
+                            <input type="hidden" id="group-id" value="@Model.Id" />
+                            <input type="text" id="message-input" class="form-control me-2" placeholder="Введіть повідомлення...">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/chatHub")
+            .withAutomaticReconnect()
+            .build();
+
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const groupId = document.getElementById('group-id').value;
+
+        messageForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = messageInput.value.trim();
+            if (content) {
+                try {
+                    await connection.invoke("SendMessage", groupId, content);
+                    messageInput.value = '';
+                } catch (err) {
+                    console.error(err);
+                    toastr.error('Помилка при відправці повідомлення');
+                }
+            }
+        });
+
+        connection.on("ReceiveMessage", (message) => {
+            const isOwn = message.userId === '@ViewBag.CurrentUserId';
+            const messageHtml = `
+                <div class="message ${isOwn ? 'own' : ''}">
+                    <div class="message-content">
+                        <img src="${message.userAvatar || '/images/default-avatar.png'}" 
+                             class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                        <div>
+                            <div class="message-header">
+                                <span class="message-author">${message.userName}</span>
+                                <small class="text-muted">${new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</small>
+                            </div>
+                            <div class="message-text">${message.content}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            chatMessages.insertAdjacentHTML('beforeend', messageHtml);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        });
+
+        connection.start()
+            .then(() => connection.invoke("JoinGroup", groupId))
+            .catch(err => console.error(err));
+
+        // Прокрутка к последнему сообщению при загрузке
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    </script>
+}

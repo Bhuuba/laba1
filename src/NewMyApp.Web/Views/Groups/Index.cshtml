@@ -1,35 +1,59 @@
 @model IEnumerable<NewMyApp.Core.Models.Group>
 
-<div class="container mt-5">
-    <h2 class="text-primary mb-4">Групи</h2>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary">Групи</h2>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Створити групу
+        </a>
+    </div>
 
     <div class="row">
         @foreach (var group in Model)
         {
             <div class="col-md-4 mb-4">
-                <div class="card shadow-sm border-0 h-100 animate__animated animate__fadeInUp">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary">@group.Name</h5>
-                        <p class="card-text text-muted">@group.Description</p>
-                        <p class="card-text">
-                            <small class="text-muted">Учасників: @group.Members.Count</small>
-                        </p>
-
-                        @if (!group.Members.Any(m => m.UserId == ViewBag.CurrentUserId))
+                <div class="group-card">
+                    <div class="group-cover" style="background-image: url('@(string.IsNullOrEmpty(group.CoverImage) ? "/images/default-group-cover.jpg" : group.CoverImage)')">
+                        <div class="group-cover-gradient"></div>
+                    </div>
+                    <div class="group-info">
+                        <h3 class="group-title">@group.Name</h3>
+                        @if (!string.IsNullOrEmpty(group.Description))
                         {
-                            <button class="btn btn-primary join-group" data-group-id="@group.Id">
-                                Приєднатися
-                            </button>
+                            <p class="group-description">@(group.Description.Length > 100 ? group.Description.Substring(0, 97) + "..." : group.Description)</p>
                         }
-                        else
-                        {
-                            <form asp-action="Leave" method="post" style="display: inline;">
-                                <input type="hidden" name="groupId" value="@group.Id" />
-                                <button type="submit" class="btn btn-danger">
-                                    Покинути групу
+                        <div class="group-stats">
+                            <div class="group-stat">
+                                <i class="bi bi-people-fill"></i>
+                                <span>@group.UserGroups.Count учасників</span>
+                            </div>
+                            <div class="group-stat">
+                                <i class="bi bi-chat-fill"></i>
+                                <span>@group.Posts.Count постів</span>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            @if (!group.UserGroups.Any(ug => ug.UserId == ViewBag.CurrentUserId))
+                            {
+                                <button class="btn btn-primary join-group" data-group-id="@group.Id">
+                                    <i class="bi bi-person-plus-fill"></i> Приєднатися
                                 </button>
-                            </form>
-                        }
+                            }
+                            else
+                            {
+                                <div class="d-flex gap-2">
+                                    <a asp-action="Details" asp-route-id="@group.Id" class="btn btn-outline-primary flex-grow-1">
+                                        <i class="bi bi-info-circle"></i> Деталі
+                                    </a>
+                                    <form asp-action="Leave" method="post" class="flex-grow-1">
+                                        <input type="hidden" name="groupId" value="@group.Id" />
+                                        <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Ви впевнені, що хочете покинути групу?')">
+                                            <i class="bi bi-box-arrow-right"></i> Покинути
+                                        </button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -39,23 +63,45 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            $('.join-group').click(function() {
-                var button = $(this);
-                var groupId = button.data('group-id');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Обработка присоединения к группе
+            document.querySelectorAll('.join-group').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const groupId = this.dataset.groupId;
+                    try {
+                        const response = await fetch('/Groups/Join', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                            },
+                            body: JSON.stringify({ groupId })
+                        });
 
-                $.post('/Groups/Join', { groupId: groupId })
-                    .done(function(response) {
-                        if (response.success) {
+                        if (response.ok) {
                             location.reload();
                         } else {
-                            alert(response.message);
+                            const error = await response.text();
+                            toastr.error(error || 'Помилка при приєднанні до групи');
                         }
-                    })
-                    .fail(function() {
-                        alert('Помилка при спробі приєднатися до групи');
-                    });
+                    } catch (error) {
+                        console.error('Error:', error);
+                        toastr.error('Помилка при приєднанні до групи');
+                    }
+                });
             });
+
+            // Анимация при появлении карточек
+            const cards = document.querySelectorAll('.group-card');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate__animated', 'animate__fadeInUp');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach(card => observer.observe(card));
         });
     </script>
 }

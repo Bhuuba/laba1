@@ -20,6 +20,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\NewMyApp.Core\NewMyApp.Core.csproj" />
     <ProjectReference Include="..\NewMyApp.Infrastructure\NewMyApp.Infrastructure.csproj" />
   </ItemGroup>

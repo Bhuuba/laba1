@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NewMyApp.Core.Models;
+using NewMyApp.Core.Services;
 using NewMyApp.Infrastructure.Data;
 using NewMyApp.Web.Models;
 using System.Threading.Tasks;
@@ -15,15 +16,18 @@ public class GroupsController : Controller
     private readonly ApplicationDbContext _context;
     private readonly UserManager<User> _userManager;
     private readonly IWebHostEnvironment _environment;
+    private readonly IChatService _chatService;
 
     public GroupsController(
         ApplicationDbContext context,
         UserManager<User> userManager,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IChatService chatService)
     {
         _context = context;
         _userManager = userManager;
         _environment = environment;
+        _chatService = chatService;
     }
 
     public async Task<IActionResult> Index()
@@ -209,4 +213,28 @@ public class GroupsController : Controller
 
         return RedirectToAction(nameof(Index));
     }
-} 
+
+    public async Task<IActionResult> Chat(int id)
+    {
+        var group = await _context.Groups
+            .Include(g => g.UserGroups)
+                .ThenInclude(ug => ug.User)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
+        if (group == null)
+        {
+            return NotFound();
+        }
+
+        var currentUser = await _userManager.GetUserAsync(User);
+        if (currentUser == null || !group.UserGroups.Any(ug => ug.UserId == currentUser.Id))
+        {
+            return Forbid();
+        }
+
+        var messages = await _chatService.GetGroupMessagesAsync(id);
+        ViewBag.Messages = messages;
+
+        return View(group);
+    }
+}
