@@ -60,7 +60,7 @@ public class ChatHub : Hub
             messageId = savedMessage.Id,
             content = savedMessage.Content,
             userId = user.Id,
-            userName = user.UserName ?? "Неизвестный пользователь",
+            userName = $"{user.FirstName} {user.LastName}",
             userAvatar = user.ProfilePicture,
             createdAt = savedMessage.CreatedAt
         });

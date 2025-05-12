@@ -28,7 +28,7 @@
                                               style="position: absolute; bottom: 0; right: 0;"></span>
                                     </div>
                                     <div class="ms-3">
-                                        <h6 class="mb-0">@userGroup.User.UserName</h6>
+                                        <h6 class="mb-0">@userGroup.User.FirstName @userGroup.User.LastName</h6>
                                         <small class="text-muted">@(userGroup.Role == GroupRole.Admin ? "Адміністратор" : "Учасник")</small>
                                     </div>
                                 </div>
@@ -60,11 +60,11 @@
                                 <div class="message-content">
                                     <div class="message-avatar">
                                         <img src="@(string.IsNullOrEmpty(message.User.ProfilePicture) ? "/images/default-avatar.png" : message.User.ProfilePicture)" 
-                                             alt="@message.User.UserName">
+                                             alt="@message.User.FirstName @message.User.LastName">
                                     </div>
                                     <div class="message-body">
                                         <div class="message-header">
-                                            <span class="message-author">@message.User.UserName</span>
+                                            <span class="message-author">@message.User.FirstName @message.User.LastName</span>
                                             <span class="message-time" title="@message.CreatedAt.ToString("dd.MM.yyyy HH:mm")">
                                                 @{
                                                     var timeAgo = DateTime.UtcNow - message.CreatedAt;

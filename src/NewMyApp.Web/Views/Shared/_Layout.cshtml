@@ -71,8 +71,7 @@
                                 <a class="nav-link" asp-controller="Friends" asp-action="Search">
                                     <i class="fas fa-search"></i> Пошук користувачів
                                 </a>
-                            </li>
-                            <li class="nav-item">
+                            </li>                            <li class="nav-item">
                                 <a class="nav-link" asp-controller="Rating" asp-action="Index">
                                     <i class="fas fa-trophy"></i> Рейтинг
                                 </a>
@@ -95,10 +94,14 @@
                                     <a class="dropdown-item" asp-controller="Profile" asp-action="Index">
                                         <i class="fas fa-user me-2"></i>Мій профіль
                                     </a>
-                                </li>
-                                <li>
+                                </li>                                <li>
                                     <a class="dropdown-item" asp-controller="Profile" asp-action="Settings">
                                         <i class="fas fa-gear me-2"></i>Налаштування
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-controller="SqlQuery" asp-action="Index">
+                                        <i class="fas fa-database me-2"></i>SQL Запити
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>

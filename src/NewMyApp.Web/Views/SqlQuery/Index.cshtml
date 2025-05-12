@@ -1,0 +1,222 @@
+@{
+    ViewData["Title"] = "SQL Запити";
+}
+
+<div class="sql-query-container">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Прості запити</h5>
+                </div>
+                <div class="card-body">                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary query-btn" data-query="SELECT FirstName, LastName, Email FROM AspNetUsers ORDER BY FirstName;">
+                            Список користувачів
+                        </button>
+                        <button class="btn btn-outline-primary query-btn" data-query="SELECT Name, Description FROM Groups ORDER BY Name;">
+                            Список груп
+                        </button>
+                        <button class="btn btn-outline-primary query-btn" data-query="SELECT TOP 10 Content, CreatedAt FROM Posts ORDER BY CreatedAt DESC;">
+                            Останні 10 постів
+                        </button>
+                        <button class="btn btn-outline-primary query-btn" data-query="SELECT Name FROM Tags ORDER BY Name;">
+                            Всі теги
+                        </button>
+                        <button class="btn btn-outline-primary query-btn" data-query="SELECT TOP 10 Content, CreatedAt FROM Comments ORDER BY CreatedAt DESC;">
+                            Останні коментарі
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Складні запити</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-success query-btn" data-query="SELECT u.FirstName, u.LastName, COUNT(p.Id) as PostCount, COUNT(DISTINCT c.Id) as CommentCount 
+FROM AspNetUsers u 
+LEFT JOIN Posts p ON u.Id = p.UserId 
+LEFT JOIN Comments c ON u.Id = c.UserId 
+GROUP BY u.Id, u.FirstName, u.LastName 
+ORDER BY PostCount DESC;">
+                            Активність користувачів
+                        </button>                        <button class="btn btn-outline-success query-btn" data-query="SELECT TOP 10 p.Content, u.FirstName, u.LastName, 
+COUNT(l.Id) as LikeCount, COUNT(c.Id) as CommentCount 
+FROM Posts p 
+JOIN AspNetUsers u ON p.UserId = u.Id 
+LEFT JOIN Likes l ON p.Id = l.PostId 
+LEFT JOIN Comments c ON p.Id = c.PostId 
+GROUP BY p.Id, p.Content, u.FirstName, u.LastName 
+ORDER BY LikeCount DESC;">
+                            Топ популярних постів
+                        </button>
+                        <button class="btn btn-outline-success query-btn" data-query="SELECT g.Name, COUNT(DISTINCT ug.UserId) as MemberCount, 
+COUNT(DISTINCT p.Id) as PostCount 
+FROM Groups g 
+LEFT JOIN UserGroups ug ON g.Id = ug.GroupId 
+LEFT JOIN Posts p ON g.Id = p.GroupId 
+GROUP BY g.Id, g.Name 
+ORDER BY MemberCount DESC;">
+                            Статистика груп
+                        </button>
+                        <button class="btn btn-outline-success query-btn" data-query="SELECT u.FirstName + ' ' + u.LastName as UserName,
+    (SELECT COUNT(*) FROM Friendships f WHERE (f.SenderId = u.Id OR f.ReceiverId = u.Id) AND f.Status = 1) as FriendsCount,
+    (SELECT COUNT(*) FROM Posts p WHERE p.UserId = u.Id) as PostsCount,
+    (SELECT COUNT(*) FROM Comments c WHERE c.UserId = u.Id) as CommentsCount
+FROM AspNetUsers u
+ORDER BY FriendsCount DESC, PostsCount DESC;">                            Статистика користувачів та друзів
+                        </button>
+                        <button class="btn btn-outline-success query-btn" data-query="SELECT g.Name as GroupName, COUNT(DISTINCT m.Id) as MessageCount,
+COUNT(DISTINCT ug.UserId) as MemberCount
+FROM ChatMessages m
+JOIN Groups g ON m.GroupId = g.Id
+LEFT JOIN UserGroups ug ON g.Id = ug.GroupId
+GROUP BY g.Id, g.Name 
+ORDER BY MessageCount DESC;">                            Статистика повідомлень у групах
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <div class="query-editor card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">SQL Редактор</h5>
+                </div>
+                <div class="card-body">
+                    <textarea id="sqlQuery" class="form-control" rows="10" placeholder="Введіть ваш SQL запит..."></textarea>
+                    <button id="executeQuery" class="btn btn-primary mt-3">
+                        <i class="fas fa-play me-2"></i>Виконати запит
+                    </button>
+                </div>
+            </div>
+    <div class="results-container mt-4">
+        <div id="errorMessage" class="alert alert-danger" style="display: none;"></div>
+        <div id="queryResults" class="table-responsive"></div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .sql-query-container {
+            padding: 20px;
+        }
+
+        .query-editor {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        #sqlQuery {
+            font-family: 'Consolas', monospace;
+            resize: vertical;
+            min-height: 200px;
+        }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .query-btn {
+            text-align: left;
+            white-space: normal;
+            height: auto;
+            padding: 10px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .query-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .query-btn.active {
+            transform: scale(0.95);
+        }
+
+        #queryResults table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        #queryResults th {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Обробник для кнопок з готовими запитами
+            $('.query-btn').click(function() {
+                const query = $(this).data('query');
+                $('#sqlQuery').val(query);
+                
+                // Анімація кнопки
+                $(this).addClass('active').delay(200).queue(function(next){
+                    $(this).removeClass('active');
+                    next();
+                });
+            });
+
+            $('#executeQuery').click(function () {
+                var query = $('#sqlQuery').val();
+                $('#errorMessage').hide();
+                $('#queryResults').empty();
+
+                // Додаємо індикатор завантаження
+                const loadingSpinner = $('<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Завантаження...</span></div></div>');
+                $('#queryResults').append(loadingSpinner);
+
+                $.ajax({
+                    url: '@Url.Action("ExecuteQuery", "SqlQuery")',
+                    type: 'POST',
+                    data: { query: query },
+                    success: function (response) {
+                        loadingSpinner.remove();
+                        
+                        if (response.error) {
+                            $('#errorMessage').text(response.error).show();
+                            return;
+                        }
+
+                        if (response.columns && response.data) {
+                            var table = $('<table class="table table-striped table-bordered table-hover">');
+                            
+                            // Заголовки
+                            var thead = $('<thead class="table-dark">');
+                            var headerRow = $('<tr>');
+                            response.columns.forEach(function(column) {
+                                headerRow.append($('<th>').text(column));
+                            });
+                            thead.append(headerRow);
+                            table.append(thead);
+
+                            // Дані
+                            var tbody = $('<tbody>');
+                            response.data.forEach(function(row) {
+                                var tr = $('<tr>');
+                                response.columns.forEach(function(column) {
+                                    tr.append($('<td>').text(row[column] || ''));
+                                });
+                                tbody.append(tr);
+                            });
+                            table.append(tbody);
+
+                            $('#queryResults').append(table);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        loadingSpinner.remove();
+                        $('#errorMessage').text('Помилка виконання запиту: ' + error).show();
+                    }
+                });
+            });
+        });
+    </script>
+}

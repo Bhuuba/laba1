@@ -31,10 +31,13 @@
                 <a class="nav-link @(tab == "password" ? "active" : "")" 
                    href="#password" data-bs-toggle="pill" role="tab">
                     <i class="fas fa-key me-2"></i>Пароль
-                </a>
-                <a class="nav-link @(tab == "email" ? "active" : "")" 
+                </a>                <a class="nav-link @(tab == "email" ? "active" : "")" 
                    href="#email" data-bs-toggle="pill" role="tab">
                     <i class="fas fa-envelope me-2"></i>Email
+                </a>
+                <a class="nav-link @(tab == "sql" ? "active" : "")"
+                   asp-controller="SqlQuery" asp-action="Index">
+                    <i class="fas fa-database me-2"></i>SQL Запити
                 </a>
                 <a class="nav-link" href="javascript:document.getElementById('logoutForm').submit();">
                     <i class="fas fa-sign-out-alt me-2"></i>Вийти з акаунта
